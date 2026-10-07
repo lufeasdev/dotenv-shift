@@ -7,6 +7,7 @@
   "There is no env \"{0}\" in {1}.": "There is no env \"{0}\" in {1}.",
   "Switched to {0} and restarted": "Switched to {0} and restarted",
   "Switched to {0}": "Switched to {0}",
+  "Unknown action \"{0}\"; use diff, save or discard.": "Unknown action \"{0}\"; use diff, save or discard.",
   "Every target matches its active env file.": "Every target matches its active env file.",
   "Which app?": "Which app?",
   "Set \"example\" in {0} to validate env files.": "Set \"example\" in {0} to validate env files.",
