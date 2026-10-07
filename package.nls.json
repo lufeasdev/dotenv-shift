@@ -1,5 +1,5 @@
 {
-  "displayName": "Dotenv Switcher",
+  "displayName": "Dotenv Switcher - Environment Manager",
   "description": "Fast and reliable .env switcher for VS Code. Switch environments per project or monorepo app, validate against .env.example, track manual edits, and restart apps with automated port cleanup.",
   "category": "Dotenv Switcher",
   "command.switch.title": "Switch Environment",
