@@ -23,14 +23,14 @@ export interface CommandDeps {
   refreshUi(): void;
 }
 
-/** Arguments of `dotenvSwitcher.showChanges` when bound to a key: `{ "app", "action", "folder" }`. */
+/** Arguments of `dotenvShift.showChanges` when bound to a key: `{ "app", "action", "folder" }`. */
 interface ShowChangesArgs {
   app?: string;
   action?: TargetAction;
   folder?: string;
 }
 
-/** Arguments of `dotenvSwitcher.switch` when bound to a key: `{ "env", "app", "folder" }`. */
+/** Arguments of `dotenvShift.switch` when bound to a key: `{ "env", "app", "folder" }`. */
 interface SwitchArgs {
   env?: string;
   app?: string;

@@ -141,7 +141,7 @@ function targetsOf(project: Project): RestartTarget[] {
     targets.push({
       key: `${folder}::app::${app.name}`,
       config: { ...config, command: config.command },
-      terminalName: config.terminalName ?? `Dotenv Switcher: ${app.name}`,
+      terminalName: config.terminalName ?? `Dotenv Shift: ${app.name}`,
       cwd: config.cwd ? app.resolve(config.cwd) : app.dirUri,
       apps: [app],
     });
@@ -152,7 +152,7 @@ function targetsOf(project: Project): RestartTarget[] {
     targets.push({
       key: `${folder}::root`,
       config: { ...root, command: root.command },
-      terminalName: root.terminalName ?? `Dotenv Switcher: ${project.name}`,
+      terminalName: root.terminalName ?? `Dotenv Shift: ${project.name}`,
       cwd: root.cwd ? project.resolve(root.cwd) : project.folder.uri,
       apps: project.apps,
     });

@@ -4,7 +4,7 @@ const fs = require('node:fs');
 const path = require('node:path');
 const vscode = require('vscode');
 
-const ws = process.env.DOTENV_SWITCHER_IT_WORKSPACE;
+const ws = process.env.DOTENV_SHIFT_IT_WORKSPACE;
 const read = (rel) => fs.readFileSync(path.join(ws, rel), 'utf8');
 const exists = (rel) => fs.existsSync(path.join(ws, rel));
 
@@ -33,7 +33,7 @@ test('applies the default env to every app without a target', async () => {
 });
 
 test('switches every app at once, using per-app file overrides', async () => {
-  await vscode.commands.executeCommand('dotenvSwitcher.switch', 'Staging', folderUri());
+  await vscode.commands.executeCommand('dotenvShift.switch', 'Staging', folderUri());
   await eventually(() => {
     assert.equal(read('.env'), read('.env.staging'));
     assert.equal(read('apps/web/.env'), read('apps/web/.env.staging'));
@@ -42,22 +42,22 @@ test('switches every app at once, using per-app file overrides', async () => {
 });
 
 test('switches one app to its own env, leaving the others alone', async () => {
-  await vscode.commands.executeCommand('dotenvSwitcher.switch', 'Mock', folderUri(), 'api');
+  await vscode.commands.executeCommand('dotenvShift.switch', 'Mock', folderUri(), 'api');
   await eventually(() => assert.equal(read('apps/api/.env'), read('apps/api/.env.mock')));
   assert.equal(read('apps/web/.env'), read('apps/web/.env.staging'));
   assert.equal(read('.env'), read('.env.staging'));
 });
 
 test('accepts keybinding-style object args', async () => {
-  await vscode.commands.executeCommand('dotenvSwitcher.switch', { env: 'Local', app: 'web' });
+  await vscode.commands.executeCommand('dotenvShift.switch', { env: 'Local', app: 'web' });
   await eventually(() => assert.equal(read('apps/web/.env'), read('apps/web/.env.local')));
   assert.equal(read('apps/api/.env'), read('apps/api/.env.mock'));
-  await vscode.commands.executeCommand('dotenvSwitcher.switch', { env: 'Staging', app: 'web' });
+  await vscode.commands.executeCommand('dotenvShift.switch', { env: 'Staging', app: 'web' });
   await eventually(() => assert.equal(read('apps/web/.env'), read('apps/web/.env.staging')));
 });
 
 test('skips apps that opted out of a shared env', async () => {
-  await vscode.commands.executeCommand('dotenvSwitcher.switch', 'Development', folderUri());
+  await vscode.commands.executeCommand('dotenvShift.switch', 'Development', folderUri());
   await eventually(() => assert.equal(read('apps/web/.env'), read('apps/web/.env.development')));
   assert.equal(read('apps/api/.env'), read('apps/api/.env.mock'), 'api opted out of Development');
   assert.equal(read('.env'), read('.env.staging'), 'root opted out of Development');
@@ -67,7 +67,7 @@ test('skips apps that opted out of a shared env', async () => {
 test('adds missing keys from the example', async () => {
   const file = path.join(ws, 'apps/web/.env.local');
   fs.writeFileSync(file, 'APP_NAME=Web\nPORT=3000\n');
-  await vscode.commands.executeCommand('dotenvSwitcher.addMissingKeys', vscode.Uri.file(file));
+  await vscode.commands.executeCommand('dotenvShift.addMissingKeys', vscode.Uri.file(file));
   await eventually(() => {
     const text = read('apps/web/.env.local');
     assert.match(text, /^API_URL=/m);
@@ -78,8 +78,8 @@ test('adds missing keys from the example', async () => {
 test('concurrent switches run one after the other', async () => {
   // Fired together: without serialising, their copies could interleave app by app.
   await Promise.all([
-    vscode.commands.executeCommand('dotenvSwitcher.switch', 'Local', folderUri()),
-    vscode.commands.executeCommand('dotenvSwitcher.switch', 'Staging', folderUri()),
+    vscode.commands.executeCommand('dotenvShift.switch', 'Local', folderUri()),
+    vscode.commands.executeCommand('dotenvShift.switch', 'Staging', folderUri()),
   ]);
   assert.equal(read('.env'), read('.env.staging'));
   assert.equal(read('apps/web/.env'), read('apps/web/.env.staging'));
@@ -114,7 +114,7 @@ test('a hand edit keeps the active env and marks the target modified', async () 
 });
 
 test('Show .env Changes with action "discard" restores the target', async () => {
-  await vscode.commands.executeCommand('dotenvSwitcher.showChanges', { app: 'web', action: 'discard' });
+  await vscode.commands.executeCommand('dotenvShift.showChanges', { app: 'web', action: 'discard' });
   await eventually(() => {
     assert.equal(read('apps/web/.env'), read('apps/web/.env.production'));
     assert.equal(status('web').modified, false);
@@ -124,7 +124,7 @@ test('Show .env Changes with action "discard" restores the target', async () => 
 test('Show .env Changes with action "save" copies the edits to the env file', async () => {
   write('apps/web/.env', read('apps/web/.env.production').replace('PORT=8080', 'PORT=8181'));
   await eventually(() => assert.equal(status('web').modified, true));
-  await vscode.commands.executeCommand('dotenvSwitcher.showChanges', { app: 'web', action: 'save' });
+  await vscode.commands.executeCommand('dotenvShift.showChanges', { app: 'web', action: 'save' });
   await eventually(() => {
     assert.match(read('apps/web/.env.production'), /^PORT=8181$/m);
     assert.equal(status('web').modified, false);
@@ -147,7 +147,7 @@ function folderUri() {
 let api;
 
 exports.run = async function run() {
-  api = await vscode.extensions.getExtension('lufeasdev.dotenv-switcher').activate();
+  api = await vscode.extensions.getExtension('lufeasdev.dotenv-shift').activate();
   let failed = 0;
   for (const { name, fn } of tests) {
     try {

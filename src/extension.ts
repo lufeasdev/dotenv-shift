@@ -11,20 +11,22 @@ import { EnvStatusBar, statusBarState } from './ui/statusBar';
 import { offerTargetActions } from './ui/targetActions';
 import { Workspace } from './workspace';
 
-export interface DotenvSwitcherStatus {
+export interface DotenvShiftStatus {
   project: string;
   apps: { name: string; env?: string; modified: boolean; changes?: EnvChanges }[];
 }
-export type EnvSwitcherStatus = DotenvSwitcherStatus;
+export type DotenvSwitcherStatus = DotenvShiftStatus;
+export type EnvSwitcherStatus = DotenvShiftStatus;
 
 /** Returned from `activate`, available to other extensions via `getExtension(...).exports`. */
-export interface DotenvSwitcherApi {
+export interface DotenvShiftApi {
   /** Each app's active env and whether its target was edited by hand. */
-  getStatus(folderUri?: string): DotenvSwitcherStatus | undefined;
+  getStatus(folderUri?: string): DotenvShiftStatus | undefined;
 }
-export type EnvSwitcherApi = DotenvSwitcherApi;
+export type DotenvSwitcherApi = DotenvShiftApi;
+export type EnvSwitcherApi = DotenvShiftApi;
 
-export async function activate(context: vscode.ExtensionContext): Promise<DotenvSwitcherApi> {
+export async function activate(context: vscode.ExtensionContext): Promise<DotenvShiftApi> {
   const log = vscode.window.createOutputChannel(DISPLAY_NAME, { log: true });
   const validator = new Validator();
   const restarter = new Restarter(log);

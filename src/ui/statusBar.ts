@@ -23,11 +23,7 @@ export interface StatusBarState {
 }
 
 export class EnvStatusBar implements vscode.Disposable {
-  private readonly item = vscode.window.createStatusBarItem(
-    'dotenvSwitcher.active',
-    vscode.StatusBarAlignment.Left,
-    100,
-  );
+  private readonly item = vscode.window.createStatusBarItem('dotenvShift.active', vscode.StatusBarAlignment.Left, 100);
 
   constructor() {
     this.item.name = DISPLAY_NAME;

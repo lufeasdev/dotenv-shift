@@ -1,6 +1,6 @@
 # Sample: monorepo
 
-Three apps switched by one `dotenv-switcher.json`: the repo root (`.`), `apps/web` and `apps/api`.
+Three apps switched by one `dotenv-shift.json`: the repo root (`.`), `apps/web` and `apps/api`.
 `web` and `api` each run a tiny `server.js` that prints its env. Open it with F5,
 "Run Extension (sample-monorepo)", or `pnpm dev:monorepo` from the extension folder.
 
@@ -21,6 +21,6 @@ Three apps switched by one `dotenv-switcher.json`: the repo root (`.`), `apps/we
 3. Pick **api**, then **Mock**: only `apps/api/.env` changes and only the api terminal restarts.
 4. Pick **All apps**, then **Staging**: every app switches; you're warned about web's missing key.
 5. Use **Back** in step 2 to return to step 1.
-6. Run **Dotenv Switcher: Switch Environment for One App**: step 1 lists only the apps.
+6. Run **Dotenv Shift: Switch Environment for One App**: step 1 lists only the apps.
 7. Edit `apps/web/.env` and save: the status bar shows `(modified)`; try
-   **Dotenv Switcher: Show .env Changes**.
+   **Dotenv Shift: Show .env Changes**.

@@ -5,7 +5,7 @@ import { loadProject, sameUri } from './project';
 import { ProjectSession, type SessionHost } from './session';
 
 /**
- * Keeps one {@link ProjectSession} per workspace folder that has a `dotenv-switcher.json`, and
+ * Keeps one {@link ProjectSession} per workspace folder that has a `dotenv-shift.json`, and
  * reloads it when the config or the workspace folders change.
  */
 export class Workspace implements vscode.Disposable {

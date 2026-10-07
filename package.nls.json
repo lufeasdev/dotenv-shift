@@ -1,18 +1,18 @@
 {
-  "displayName": "Dotenv Switcher - Environment Manager",
+  "displayName": "Dotenv Shift",
   "description": "Fast and reliable .env switcher for VS Code. Switch environments per project or monorepo app, validate against .env.example, track manual edits, and restart apps with automated port cleanup.",
-  "category": "Dotenv Switcher",
+  "category": "Dotenv Shift",
   "command.switch.title": "Switch Environment",
   "command.switchApp.title": "Switch Environment for One App",
   "command.showChanges.title": "Show .env Changes",
   "command.validate.title": "Validate Env Files",
   "command.restart.title": "Restart App",
   "command.resetToDefault.title": "Reset to Default Environment",
-  "command.init.title": "Create Config (dotenv-switcher.json)",
+  "command.init.title": "Create Config (dotenv-shift.json)",
   "command.openConfig.title": "Open Config",
   "command.addMissingKeys.title": "Add Missing Keys to Env File",
-  "configuration.title": "Dotenv Switcher",
+  "configuration.title": "Dotenv Shift",
   "configuration.restartDelayMs.description": "Delay (ms) between sending Ctrl+C and re-running the restart command.",
-  "capabilities.untrustedWorkspaces.description": "Restarting the app and freeing ports are disabled in Restricted Mode, because restart commands come from the workspace's dotenv-switcher.json. Switching and validating env files still work.",
-  "capabilities.virtualWorkspaces.description": "Dotenv Switcher reads and copies local files and manages local processes."
+  "capabilities.untrustedWorkspaces.description": "Restarting the app and freeing ports are disabled in Restricted Mode, because restart commands come from the workspace's dotenv-shift.json. Switching and validating env files still work.",
+  "capabilities.virtualWorkspaces.description": "Dotenv Shift reads and copies local files and manages local processes."
 }

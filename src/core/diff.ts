@@ -29,7 +29,7 @@ export function buildAppendText(envText: string, entries: EnvEntry[]): string {
   const eol = envText.includes('\r\n') ? '\r\n' : '\n';
   const prefix = envText.length === 0 || envText.endsWith('\n') ? '' : eol;
   const lines = entries.map((e) => `${e.key}=${e.raw.replace(/\r?\n/g, eol)}`);
-  return `${prefix}${eol}# added by Dotenv Switcher${eol}${lines.join(eol)}${eol}`;
+  return `${prefix}${eol}# added by Dotenv Shift${eol}${lines.join(eol)}${eol}`;
 }
 
 function dedupe(entries: EnvEntry[]): EnvEntry[] {

@@ -9,7 +9,7 @@ import {
   parseConfig,
 } from './core/config';
 
-/** A workspace folder that has a `dotenv-switcher.json` (or `env-switcher.json`). */
+/** A workspace folder that has a `dotenv-shift.json` (or legacy config). */
 export class Project {
   readonly apps: App[];
   readonly configUri: vscode.Uri;

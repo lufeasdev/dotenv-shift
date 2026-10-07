@@ -4,11 +4,11 @@ import type { App, Project } from './project';
 /** Active env title per app name. */
 export type ActiveEnvs = Map<string, string>;
 
-const STATE_KEY = 'dotenvSwitcher.active';
-const LEGACY_STATE_KEY = 'envSwitcher.active';
+const STATE_KEY = 'dotenvShift.active';
+const LEGACY_STATE_KEYS = ['dotenvSwitcher.active', 'envSwitcher.active'] as const;
 
 /**
- * Remembers each app's active env in the workspace state, so `dotenv-switcher.json` stays free of
+ * Remembers each app's active env in the workspace state, so `dotenv-shift.json` stays free of
  * per-developer state and can be committed.
  */
 export class ActiveEnvStore {
@@ -16,7 +16,13 @@ export class ActiveEnvStore {
 
   /** Active env title per app, ignoring entries that no longer match the config. */
   get(project: Project): ActiveEnvs {
-    const stored = this.memento.get<unknown>(this.key(project)) ?? this.memento.get<unknown>(this.legacyKey(project));
+    let stored = this.memento.get<unknown>(this.key(project));
+    if (!stored) {
+      for (const legacy of LEGACY_STATE_KEYS) {
+        stored = this.memento.get<unknown>(`${legacy}:${project.folder.uri.toString()}`);
+        if (stored) break;
+      }
+    }
     const active: ActiveEnvs = new Map();
     if (!stored || typeof stored !== 'object') return active;
     for (const app of project.apps) {
@@ -49,9 +55,5 @@ export class ActiveEnvStore {
 
   private key(project: Project): string {
     return `${STATE_KEY}:${project.folder.uri.toString()}`;
-  }
-
-  private legacyKey(project: Project): string {
-    return `${LEGACY_STATE_KEY}:${project.folder.uri.toString()}`;
   }
 }

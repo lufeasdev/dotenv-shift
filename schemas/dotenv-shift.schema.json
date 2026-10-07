@@ -1,6 +1,6 @@
 {
   "$schema": "http://json-schema.org/draft-07/schema#",
-  "title": "Dotenv Switcher config",
+  "title": "Dotenv Shift config",
   "type": "object",
   "additionalProperties": false,
   "properties": {
@@ -121,7 +121,7 @@
         },
         "terminalName": {
           "type": "string",
-          "description": "Name of the app terminal. Defaults to \"Dotenv Switcher: <app or folder name>\"."
+          "description": "Name of the app terminal. Defaults to \"Dotenv Shift: <app or folder name>\"."
         },
         "cwd": {
           "type": "string",

@@ -8,7 +8,7 @@ import { fileURLToPath } from 'node:url';
 import { runTests } from '@vscode/test-electron';
 
 const root = join(dirname(fileURLToPath(import.meta.url)), '..', '..');
-const tmp = await mkdtemp(join(tmpdir(), 'dotenv-switcher-it-'));
+const tmp = await mkdtemp(join(tmpdir(), 'dotenv-shift-it-'));
 const workspace = join(tmp, 'workspace');
 
 try {
@@ -18,7 +18,7 @@ try {
     filter: (src) => !/[\\/]\.env$/.test(src),
   });
 
-  const configPath = join(workspace, 'dotenv-switcher.json');
+  const configPath = join(workspace, 'dotenv-shift.json');
   const config = JSON.parse(await readFile(configPath, 'utf8'));
   const app = (name) => config.apps.find((a) => (a.name ?? a.dir.split('/').pop()) === name);
 
@@ -49,7 +49,7 @@ try {
     vscodeExecutablePath: process.env.VSCODE_EXECUTABLE || undefined,
     extensionDevelopmentPath: root,
     extensionTestsPath: join(root, 'test/integration/suite.cjs'),
-    extensionTestsEnv: { DOTENV_SWITCHER_IT_WORKSPACE: workspace },
+    extensionTestsEnv: { DOTENV_SHIFT_IT_WORKSPACE: workspace },
     launchArgs: [
       workspace,
       '--disable-extensions',

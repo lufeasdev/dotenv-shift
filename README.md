@@ -1,10 +1,10 @@
-# Dotenv Switcher
+# Dotenv Shift
 
 Switch `.env` files from the status bar, for a single project or every app of a monorepo. Dotenv
-Switcher keeps each env in sync with `.env.example`, notices when `.env` is edited by hand, and
+Shift keeps each env in sync with `.env.example`, notices when `.env` is edited by hand, and
 restarts your app after a switch, freeing its port first.
 
-Everything is configured in one `dotenv-switcher.json` per project, so the setup can be committed
+Everything is configured in one `dotenv-shift.json` per project, so the setup can be committed
 and shared with the team.
 
 ## Contents
@@ -41,8 +41,8 @@ and shared with the team.
 ## Quick start
 
 1. Install the extension and open your project.
-2. Run **Dotenv Switcher: Create Config** from the Command Palette. It generates
-   `dotenv-switcher.json` from the `.env*` files it finds (and detects monorepos).
+2. Run **Dotenv Shift: Create Config** from the Command Palette. It generates
+   `dotenv-shift.json` from the `.env*` files it finds (and detects monorepos).
 3. Adjust the file, then click the env name in the status bar to switch.
 
 A minimal config:
@@ -58,7 +58,7 @@ A minimal config:
 
 ## Configuration
 
-`dotenv-switcher.json` lives at the root of the workspace folder. VS Code offers autocomplete and
+`dotenv-shift.json` lives at the root of the workspace folder. VS Code offers autocomplete and
 validation while you edit it.
 
 ### Single repo example
@@ -109,7 +109,7 @@ Without `restart` (or without `command`), switching only copies files.
 | --- | --- | --- | --- |
 | `command` | string | none | Command that starts the app, e.g. `pnpm dev`, `npm run dev`, `php artisan serve`. |
 | `enabled` | boolean | `true` | Set to `false` to turn restarting off without removing the command. |
-| `terminalName` | string | `Dotenv Switcher: <app or folder name>` | Name of the app terminal. |
+| `terminalName` | string | `Dotenv Shift: <app or folder name>` | Name of the app terminal. |
 | `cwd` | string | project or app folder | Working directory of the command. |
 | `startIfNotRunning` | boolean | `true` | Start the app when its terminal isn't open yet. With `false`, only running apps are restarted. |
 | `killPorts` | array | `["PORT"]` | Ports to free before starting: port numbers, or env keys holding one (read from the old and the new env). `[]` turns it off. |
@@ -135,7 +135,7 @@ looked up inside every app's `dir`, and `target` and `example` are relative to e
 
 ```
 my-monorepo/
-├── dotenv-switcher.json
+├── dotenv-shift.json
 ├── .env.example  .env.local  .env.staging  .env.production          root
 └── apps/
     ├── web/   .env.example  .env.local  .env.staging  .env.production
@@ -202,7 +202,7 @@ In a monorepo the picker has two steps: first the scope, then the env.
 2. The envs available for that scope. For **All apps** that's every env (one that only some apps
    have switches just those); for one app, its own list. **Back** returns to step 1.
 
-**Dotenv Switcher: Switch Environment for One App** skips the "All apps" entry.
+**Dotenv Shift: Switch Environment for One App** skips the "All apps" entry.
 
 - Only the switched apps are restarted: their own `restart`, plus the top-level `restart` if
   there is one.
@@ -217,7 +217,7 @@ In a monorepo the picker has two steps: first the scope, then the env.
 `apps/`, `packages/` or `services/`, and includes the root as an app if it has `.env*` files too.
 
 Alternatively, open each app as a folder of a multi-root workspace with its own
-`dotenv-switcher.json`. Switching then asks which folder first.
+`dotenv-shift.json`. Switching then asks which folder first.
 
 ## How it works
 
@@ -234,10 +234,10 @@ Alternatively, open each app as a folder of a multi-root workspace with its own
 Each env file is compared with the example:
 
 - **Missing keys** are warnings in the Problems panel. The quick fix (lightbulb) appends them
-  with the example's values, under a `# added by Dotenv Switcher` comment, keeping the file's line
+  with the example's values, under a `# added by Dotenv Shift` comment, keeping the file's line
   endings.
 - **Extra keys** (not in the example) are informational.
-- **Dotenv Switcher: Validate Env Files** lists every file in the *Dotenv Switcher* output channel as
+- **Dotenv Shift: Validate Env Files** lists every file in the *Dotenv Shift* output channel as
   `[OK]`, `[MISSING]`, `[NOT FOUND]` or `[SKIPPED]`, and offers to add all missing keys.
 
 Files are re-validated as you edit them.
@@ -253,7 +253,7 @@ When `.env` is edited and saved so that it matches no env:
 - The active env stays, and the status bar shows it as `Local (modified)` with a warning
   background. The tooltip lists the changes, e.g. `changed: PORT · added: EXTRA`.
 - A notification offers **Show Diff**, **Save to `.env.local`** (keep the edits in the env file)
-  and **Discard Changes** (restore `.env`). **Dotenv Switcher: Show .env Changes** offers the same.
+  and **Discard Changes** (restore `.env`). **Dotenv Shift: Show .env Changes** offers the same.
 - Switching away asks before overwriting the edits.
 
 Deleting `.env` clears the active env.
@@ -268,7 +268,7 @@ Deleting `.env` clears the active env.
    frees both.
 3. **Start:** the command runs in the app terminal, which is created if needed.
 
-Freed ports are logged in the *Dotenv Switcher* output channel, e.g. `port 3000: killed PID 12345`.
+Freed ports are logged in the *Dotenv Shift* output channel, e.g. `port 3000: killed PID 12345`.
 
 ### Default env
 
@@ -279,11 +279,11 @@ soon as the project opens:
 - An env with `confirm: true` is never applied automatically. You get a notification with a
   button to switch instead.
 - In a monorepo, each app without a target gets the default.
-- **Dotenv Switcher: Reset to Default Environment** switches back to it at any time.
+- **Dotenv Shift: Reset to Default Environment** switches back to it at any time.
 
 ## Security
 
-Restart commands come from the workspace's `dotenv-switcher.json`. In
+Restart commands come from the workspace's `dotenv-shift.json`. In
 [Restricted Mode](https://code.visualstudio.com/docs/editor/workspace-trust) (an untrusted
 workspace), restarting and freeing ports are disabled; switching and validating env files still
 work. Env values are never written to the log or shown in messages, only key names.
@@ -306,46 +306,46 @@ from a desktop often have a minimal `PATH`.
 
 | Command | Description |
 | --- | --- |
-| Dotenv Switcher: Switch Environment | Pick an env (in a monorepo: the scope, then the env), copy it to the target, restart. Also on status bar click. |
-| Dotenv Switcher: Switch Environment for One App | Monorepo: switch a single app. |
-| Dotenv Switcher: Show .env Changes | Review hand edits to a target: diff, save to the env file, or discard. |
-| Dotenv Switcher: Validate Env Files | Check every env file against the example, and add missing keys. |
-| Dotenv Switcher: Restart App | Restart without switching. |
-| Dotenv Switcher: Reset to Default Environment | Switch to the `default` env. |
-| Dotenv Switcher: Create Config (dotenv-switcher.json) | Generate a config from the `.env*` files found. |
-| Dotenv Switcher: Open Config | Open `dotenv-switcher.json`. |
-| Dotenv Switcher: Add Missing Keys to Env File | Append missing keys to an env's file in every app. |
+| Dotenv Shift: Switch Environment | Pick an env (in a monorepo: the scope, then the env), copy it to the target, restart. Also on status bar click. |
+| Dotenv Shift: Switch Environment for One App | Monorepo: switch a single app. |
+| Dotenv Shift: Show .env Changes | Review hand edits to a target: diff, save to the env file, or discard. |
+| Dotenv Shift: Validate Env Files | Check every env file against the example, and add missing keys. |
+| Dotenv Shift: Restart App | Restart without switching. |
+| Dotenv Shift: Reset to Default Environment | Switch to the `default` env. |
+| Dotenv Shift: Create Config (dotenv-shift.json) | Generate a config from the `.env*` files found. |
+| Dotenv Shift: Open Config | Open `dotenv-shift.json`. |
+| Dotenv Shift: Add Missing Keys to Env File | Append missing keys to an env's file in every app. |
 
 ## Keybindings
 
-`dotenvSwitcher.switch` accepts an env title or file, or an object:
+`dotenvShift.switch` accepts an env title or file, or an object:
 
 ```jsonc
 // keybindings.json
 [
-  { "key": "ctrl+alt+e", "command": "dotenvSwitcher.switch" },
-  { "key": "ctrl+alt+1", "command": "dotenvSwitcher.switch", "args": "Local" },
-  { "key": "ctrl+alt+m", "command": "dotenvSwitcher.switch", "args": { "env": "Mock", "app": "api" } },
-  { "key": "ctrl+alt+d", "command": "dotenvSwitcher.showChanges", "args": { "action": "discard" } }
+  { "key": "ctrl+alt+e", "command": "dotenvShift.switch" },
+  { "key": "ctrl+alt+1", "command": "dotenvShift.switch", "args": "Local" },
+  { "key": "ctrl+alt+m", "command": "dotenvShift.switch", "args": { "env": "Mock", "app": "api" } },
+  { "key": "ctrl+alt+d", "command": "dotenvShift.showChanges", "args": { "action": "discard" } }
 ]
 ```
 
 The object form takes `env` (title or file), `app` (monorepo: switch only that app) and `folder`
 (a workspace folder URI, for multi-root workspaces).
 
-`dotenvSwitcher.showChanges` takes `{ "action": "diff" | "save" | "discard", "app", "folder" }` to act
+`dotenvShift.showChanges` takes `{ "action": "diff" | "save" | "discard", "app", "folder" }` to act
 on a hand-edited target without asking.
 
 ## Settings
 
 | Setting | Default | Description |
 | --- | --- | --- |
-| `dotenvSwitcher.restartDelayMs` | `300` | Delay in ms between Ctrl+C and running the command again (`ctrlC` mode). |
+| `dotenvShift.restartDelayMs` | `300` | Delay in ms between Ctrl+C and running the command again (`ctrlC` mode). |
 
 ## API for other extensions
 
 ```ts
-const api = vscode.extensions.getExtension('lufeasdev.dotenv-switcher')?.exports;
+const api = vscode.extensions.getExtension('lufeasdev.dotenv-shift')?.exports;
 api?.getStatus();
 // { project: 'my-app', apps: [{ name: 'web', env: 'Local', modified: false, changes: undefined }] }
 ```
@@ -365,7 +365,7 @@ pnpm compile             # bundle with rolldown (or: pnpm watch)
 pnpm typecheck
 pnpm test                # unit tests (vitest)
 pnpm test:integration    # integration tests in a real VS Code
-pnpm package             # build dotenv-switcher-<version>.vsix
+pnpm package             # build dotenv-shift-<version>.vsix
 ```
 
 ### Trying it out
@@ -467,7 +467,7 @@ To add a language, copy `l10n/bundle.l10n.json` to `l10n/bundle.l10n.<locale>.js
 ### Adding a feature
 
 - **A config option:** add it to the types and parsing in `src/core/config.ts` (with a unit test
-  in `test/config.test.ts`), to `schemas/dotenv-switcher.schema.json`, and to the README tables.
+  in `test/config.test.ts`), to `schemas/dotenv-shift.schema.json`, and to the README tables.
 - **A command:** add the ID to `src/constants.ts`, to `package.json` (`contributes.commands`)
   with its title in `package.nls.json`, a method to `CommandHandlers`, and its registration in
   `registerCommands`.

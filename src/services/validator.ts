@@ -3,7 +3,7 @@ import type { EnvDefinition } from '../core/config';
 import { diffEnv, type EnvDiff } from '../core/diff';
 import { type App, type Project, readText, relative } from '../project';
 
-export const DIAGNOSTIC_SOURCE = 'Dotenv Switcher';
+export const DIAGNOSTIC_SOURCE = 'Dotenv Shift';
 export const MISSING_KEY_CODE = 'missing-key';
 
 /** Status of one env file: one env in one app. */
@@ -29,7 +29,7 @@ export interface EnvSummary {
 }
 
 export class Validator implements vscode.Disposable {
-  private readonly diagnostics = vscode.languages.createDiagnosticCollection('dotenvSwitcher');
+  private readonly diagnostics = vscode.languages.createDiagnosticCollection('dotenvShift');
   private readonly statuses = new Map<string, EnvStatus[]>();
 
   /** Validates every env file of every app against that app's example file. */
