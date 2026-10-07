@@ -1,7 +1,7 @@
 import * as vscode from 'vscode';
 import type { EnvChanges } from './core/diff';
 import { errorMessage } from './core/errors';
-import { type App, type Project, relative } from './project';
+import { type App, type Project, readDisk, relative } from './project';
 import { applyDefaultEnv, appsWithoutTarget, detectAppEnv, targetChanges } from './services/switcher';
 import type { Validator } from './services/validator';
 import type { ActiveEnvStore, ActiveEnvs } from './state';
@@ -22,10 +22,14 @@ export interface SessionHost {
  * A loaded project and everything that lives as long as it does: file watchers, which targets
  * were edited by hand, pending revalidation, and a queue that serialises file-changing operations.
  */
+/** How long a target must be quiet before it's re-read (a write may truncate first). */
+const TARGET_SETTLE_MS = 150;
+
 export class ProjectSession implements vscode.Disposable {
   private readonly watchers: vscode.Disposable[] = [];
   private modified = new Map<string, EnvChanges>();
   private revalidateTimer: ReturnType<typeof setTimeout> | undefined;
+  private readonly targetTimers = new Map<string, ReturnType<typeof setTimeout>>();
   private queue: Promise<unknown> = Promise.resolve();
   private disposed = false;
 
@@ -84,6 +88,7 @@ export class ProjectSession implements vscode.Disposable {
   dispose(): void {
     this.disposed = true;
     clearTimeout(this.revalidateTimer);
+    for (const timer of this.targetTimers.values()) clearTimeout(timer);
     for (const watcher of this.watchers) watcher.dispose();
     this.host.validator.clear(this.project);
   }
@@ -194,26 +199,37 @@ export class ProjectSession implements vscode.Disposable {
         watcher.onDidDelete(onEvent);
       }
 
-      // A target replaced from outside follows the env it now matches; one edited by hand so it
-      // matches none keeps its active env and is marked modified.
+      // Change, create and delete all re-read the target once writes settle: watchers may report
+      // an overwrite as delete + create, out of order, or merge the events of a write that
+      // truncates first. Queued behind running switches, so it sees the final state.
       const target = watch(app.targetUri);
-      const onTargetEvent = () =>
-        this.guard(async () => {
-          const title = await detectAppEnv(app);
-          if (title && title !== this.active().get(app.name)) await this.setActive([app], title);
-          await this.refreshModified([app]);
-          this.host.onDidChange();
-        });
+      const onTargetEvent = () => {
+        clearTimeout(this.targetTimers.get(app.name));
+        this.targetTimers.set(
+          app.name,
+          setTimeout(() => this.guard(() => this.exclusive(() => this.syncTarget(app))), TARGET_SETTLE_MS),
+        );
+      };
       target.onDidChange(onTargetEvent);
       target.onDidCreate(onTargetEvent);
-      target.onDidDelete(() =>
-        this.guard(async () => {
-          await this.setActive([app], undefined);
-          await this.refreshModified();
-          this.host.onDidChange();
-        }),
-      );
+      target.onDidDelete(onTargetEvent);
     }
+  }
+
+  /**
+   * Updates an app's active env from its target on disk: gone clears it; a target replaced from
+   * outside follows the env it now matches; one edited by hand so it matches none keeps its
+   * active env and is marked modified.
+   */
+  private async syncTarget(app: App): Promise<void> {
+    if ((await readDisk(app.targetUri)) === undefined) {
+      if (this.active().has(app.name)) await this.setActive([app], undefined);
+    } else {
+      const title = await detectAppEnv(app);
+      if (title && title !== this.active().get(app.name)) await this.setActive([app], title);
+    }
+    await this.refreshModified([app]);
+    this.host.onDidChange();
   }
 
   /** Revalidates shortly after env files change (debounced, e.g. while typing). */
