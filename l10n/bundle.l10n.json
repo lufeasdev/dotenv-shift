@@ -87,7 +87,7 @@
   "\"{0}\" doesn't exist in every app.": "\"{0}\" doesn't exist in every app.",
   "Switch to \"{0}\"?": "Switch to \"{0}\"?",
   "Switch": "Switch",
-  "No \"restart.command\" is set in env-switcher.json.": "No \"restart.command\" is set in env-switcher.json.",
+  "No \"restart.command\" is set in {0}.": "No \"restart.command\" is set in {0}.",
   "Manage Workspace Trust": "Manage Workspace Trust",
   "Restarting is disabled in Restricted Mode.": "Restarting is disabled in Restricted Mode.",
   "Port {0} is still in use (PID {1}). The app may fail to start.": "Port {0} is still in use (PID {1}). The app may fail to start."

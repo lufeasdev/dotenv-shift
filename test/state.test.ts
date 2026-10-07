@@ -42,7 +42,14 @@ describe('ActiveEnvStore', () => {
   it('ignores stored envs or apps that are no longer in the config', async () => {
     const m = memento();
     const project = monorepo();
-    await m.update('envSwitcher.active:file:///repo', { web: 'Removed', api: 'Mock', gone: 'Local' });
+    await m.update('dotenvSwitcher.active:file:///repo', { web: 'Removed', api: 'Mock', gone: 'Local' });
+    expect(Object.fromEntries(new ActiveEnvStore(m as never).get(project))).toEqual({ api: 'Mock' });
+  });
+
+  it('falls back to legacy state key', async () => {
+    const m = memento();
+    const project = monorepo();
+    await m.update('envSwitcher.active:file:///repo', { api: 'Mock' });
     expect(Object.fromEntries(new ActiveEnvStore(m as never).get(project))).toEqual({ api: 'Mock' });
   });
 

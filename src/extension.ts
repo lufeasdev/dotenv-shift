@@ -11,18 +11,20 @@ import { EnvStatusBar, statusBarState } from './ui/statusBar';
 import { offerTargetActions } from './ui/targetActions';
 import { Workspace } from './workspace';
 
-export interface EnvSwitcherStatus {
+export interface DotenvSwitcherStatus {
   project: string;
   apps: { name: string; env?: string; modified: boolean; changes?: EnvChanges }[];
 }
+export type EnvSwitcherStatus = DotenvSwitcherStatus;
 
 /** Returned from `activate`, available to other extensions via `getExtension(...).exports`. */
-export interface EnvSwitcherApi {
+export interface DotenvSwitcherApi {
   /** Each app's active env and whether its target was edited by hand. */
-  getStatus(folderUri?: string): EnvSwitcherStatus | undefined;
+  getStatus(folderUri?: string): DotenvSwitcherStatus | undefined;
 }
+export type EnvSwitcherApi = DotenvSwitcherApi;
 
-export async function activate(context: vscode.ExtensionContext): Promise<EnvSwitcherApi> {
+export async function activate(context: vscode.ExtensionContext): Promise<DotenvSwitcherApi> {
   const log = vscode.window.createOutputChannel(DISPLAY_NAME, { log: true });
   const validator = new Validator();
   const restarter = new Restarter(log);

@@ -1,11 +1,11 @@
 import * as vscode from 'vscode';
-import { CONFIG_FILE, ConfigError } from './core/config';
+import { CONFIG_FILES, ConfigError } from './core/config';
 import { errorMessage } from './core/errors';
-import { configUri, loadProject, sameUri } from './project';
+import { loadProject, sameUri } from './project';
 import { ProjectSession, type SessionHost } from './session';
 
 /**
- * Keeps one {@link ProjectSession} per workspace folder that has an `env-switcher.json`, and
+ * Keeps one {@link ProjectSession} per workspace folder that has a `dotenv-switcher.json`, and
  * reloads it when the config or the workspace folders change.
  */
 export class Workspace implements vscode.Disposable {
@@ -13,7 +13,7 @@ export class Workspace implements vscode.Disposable {
   private readonly disposables: vscode.Disposable[] = [];
 
   constructor(private readonly host: SessionHost) {
-    const configWatcher = vscode.workspace.createFileSystemWatcher(`**/${CONFIG_FILE}`);
+    const configWatcher = vscode.workspace.createFileSystemWatcher(`**/{${CONFIG_FILES.join(',')}}`);
     const reload = (uri: vscode.Uri) => void this.reloadFolderOf(uri);
     configWatcher.onDidCreate(reload);
     configWatcher.onDidChange(reload);
@@ -96,7 +96,9 @@ export class Workspace implements vscode.Disposable {
 
   private async reloadFolderOf(uri: vscode.Uri): Promise<void> {
     const folder = vscode.workspace.getWorkspaceFolder(uri);
-    if (!folder || !sameUri(configUri(folder), uri)) return;
+    if (!folder) return;
+    const isConfig = CONFIG_FILES.some((name) => sameUri(vscode.Uri.joinPath(folder.uri, name), uri));
+    if (!isConfig) return;
     await this.loadFolder(folder);
     this.host.onDidChange();
   }

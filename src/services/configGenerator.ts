@@ -6,7 +6,7 @@ const EXAMPLE_NAMES = ['.env.example', '.env.sample', '.env.template', '.env.dis
 const MONOREPO_ROOTS = ['apps', 'packages', 'services'];
 
 /**
- * Creates a starter `env-switcher.json`: a monorepo config when apps with `.env*` files are
+ * Creates a starter `dotenv-switcher.json`: a monorepo config when apps with `.env*` files are
  * found under apps/, packages/ or services/, otherwise a single-repo config from the root.
  */
 export async function createConfig(folder: vscode.WorkspaceFolder): Promise<vscode.Uri> {

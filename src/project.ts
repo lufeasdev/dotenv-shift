@@ -1,24 +1,30 @@
 import * as path from 'node:path';
 import * as vscode from 'vscode';
-import { type AppConfig, CONFIG_FILE, type EnvDefinition, type EnvSwitcherConfig, parseConfig } from './core/config';
+import {
+  type AppConfig,
+  CONFIG_FILE,
+  CONFIG_FILES,
+  type EnvDefinition,
+  type EnvSwitcherConfig,
+  parseConfig,
+} from './core/config';
 
-/** A workspace folder that has an `env-switcher.json`. */
+/** A workspace folder that has a `dotenv-switcher.json` (or `env-switcher.json`). */
 export class Project {
   readonly apps: App[];
+  readonly configUri: vscode.Uri;
 
   constructor(
     readonly folder: vscode.WorkspaceFolder,
     readonly config: EnvSwitcherConfig,
+    configUriOverride?: vscode.Uri,
   ) {
+    this.configUri = configUriOverride ?? configUri(folder);
     this.apps = config.apps.map((app) => new App(this, app));
   }
 
   get name(): string {
     return this.folder.name;
-  }
-
-  get configUri(): vscode.Uri {
-    return configUri(this.folder);
   }
 
   /** Finds the app and env an env file belongs to. */
@@ -123,9 +129,12 @@ export function configUri(folder: vscode.WorkspaceFolder): vscode.Uri {
 
 /** Returns undefined when the folder has no config; throws ConfigError when it is invalid. */
 export async function loadProject(folder: vscode.WorkspaceFolder): Promise<Project | undefined> {
-  const text = await readText(configUri(folder));
-  if (text === undefined) return undefined;
-  return new Project(folder, parseConfig(text, folder.name));
+  for (const name of CONFIG_FILES) {
+    const uri = vscode.Uri.joinPath(folder.uri, name);
+    const text = await readText(uri);
+    if (text !== undefined) return new Project(folder, parseConfig(text, folder.name), uri);
+  }
+  return undefined;
 }
 
 /**

@@ -2,10 +2,10 @@
 
 ## 0.1.0
 
-First public release of Env Switcher for VS Code.
+First public release of Dotenv Switcher for VS Code.
 
 ### Switching
-- Switch env files from the status bar using `env-switcher.json`: title, description, and optional confirmation per env.
+- Switch env files from the status bar using `dotenv-switcher.json`: title, description, and optional confirmation per env.
 - Automatic `default` env fallback when `.env` is missing (respects `confirm` safeguards).
 - Direct command and keybinding support with arguments (`env`, `app`, `folder`).
 
@@ -35,5 +35,5 @@ First public release of Env Switcher for VS Code.
 - Strict Conventional Commits enforcement with commitlint and git hooks.
 - Workspace Trust integration: disables arbitrary restart commands and port termination in Restricted Mode.
 - Full localization readiness (`vscode.l10n`).
-- JSON schema for `env-switcher.json` validation and autocomplete.
+- JSON schema for `dotenv-switcher.json` validation and autocomplete.
 - Public extension API (`getStatus()`).

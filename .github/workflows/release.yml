@@ -21,11 +21,11 @@ jobs:
       - name: Package extension
         run: pnpm package
       - name: Publish to VS Code Marketplace
-        run: pnpm exec vsce publish --packagePath env-switcher-*.vsix -p ${{ secrets.VSCE_PAT }}
+        run: pnpm exec vsce publish --packagePath dotenv-switcher-*.vsix -p ${{ secrets.VSCE_PAT }}
       - name: Create GitHub Release
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         run: |
-          gh release create ${{ github.ref_name }} env-switcher-*.vsix \
+          gh release create ${{ github.ref_name }} dotenv-switcher-*.vsix \
             --title "${{ github.ref_name }}" \
             --generate-notes

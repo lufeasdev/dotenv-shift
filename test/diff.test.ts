@@ -10,14 +10,14 @@ describe('diffEnv', () => {
 
   it('builds append text with example defaults', () => {
     const { missing } = diffEnv('A=1\nB="two words"', 'A=x');
-    expect(buildAppendText('A=x', missing)).toBe('\n\n# added by Env Switcher\nB="two words"\n');
-    expect(buildAppendText('A=x\n', missing)).toBe('\n# added by Env Switcher\nB="two words"\n');
+    expect(buildAppendText('A=x', missing)).toBe('\n\n# added by Dotenv Switcher\nB="two words"\n');
+    expect(buildAppendText('A=x\n', missing)).toBe('\n# added by Dotenv Switcher\nB="two words"\n');
     expect(buildAppendText('A=x', [])).toBe('');
   });
 
   it('keeps CRLF line endings', () => {
     const { missing } = diffEnv('A=1\r\nB=2\r\n', 'A=x\r\n');
-    expect(buildAppendText('A=x\r\n', missing)).toBe('\r\n# added by Env Switcher\r\nB=2\r\n');
+    expect(buildAppendText('A=x\r\n', missing)).toBe('\r\n# added by Dotenv Switcher\r\nB=2\r\n');
   });
 });
 

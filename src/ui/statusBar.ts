@@ -1,5 +1,5 @@
 import * as vscode from 'vscode';
-import { Commands } from '../constants';
+import { Commands, DISPLAY_NAME } from '../constants';
 import type { EnvChanges } from '../core/diff';
 import { relative } from '../project';
 import { summarize, type Validator } from '../services/validator';
@@ -23,10 +23,14 @@ export interface StatusBarState {
 }
 
 export class EnvStatusBar implements vscode.Disposable {
-  private readonly item = vscode.window.createStatusBarItem('envSwitcher.active', vscode.StatusBarAlignment.Left, 100);
+  private readonly item = vscode.window.createStatusBarItem(
+    'dotenvSwitcher.active',
+    vscode.StatusBarAlignment.Left,
+    100,
+  );
 
   constructor() {
-    this.item.name = 'Env Switcher';
+    this.item.name = DISPLAY_NAME;
     this.item.command = Commands.switch;
   }
 
@@ -44,7 +48,7 @@ export class EnvStatusBar implements vscode.Disposable {
 
     const tooltip = new vscode.MarkdownString(undefined, true);
     tooltip.isTrusted = { enabledCommands: [Commands.showChanges] };
-    tooltip.appendMarkdown(`**Env Switcher** — ${projectName}\n\n`);
+    tooltip.appendMarkdown(`**${DISPLAY_NAME}** — ${projectName}\n\n`);
     if (state.monorepo) {
       for (const app of state.perApp) {
         tooltip.appendMarkdown(

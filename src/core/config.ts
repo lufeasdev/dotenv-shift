@@ -1,7 +1,9 @@
 import { type ParseError, parse as parseJsonc, printParseErrorCode } from 'jsonc-parser';
 import { isValidPort, type PortSpec } from './ports';
 
-export const CONFIG_FILE = 'env-switcher.json';
+export const CONFIG_FILE = 'dotenv-switcher.json';
+export const LEGACY_CONFIG_FILE = 'env-switcher.json';
+export const CONFIG_FILES = [CONFIG_FILE, LEGACY_CONFIG_FILE] as const;
 
 export interface EnvDefinition {
   /** Identifies the env; envs with the same title are switched together across apps. */
@@ -27,7 +29,7 @@ export type RestartMode = 'auto' | 'ctrlC' | 'recreate';
 export interface RestartConfig {
   enabled: boolean;
   command?: string;
-  /** Defaults to `Env Switcher: <app or folder name>` so projects don't share one terminal. */
+  /** Defaults to `Dotenv Switcher: <app or folder name>` so projects don't share one terminal. */
   terminalName?: string;
   cwd?: string;
   /** Start the command even if the app terminal isn't open yet. */
@@ -74,7 +76,7 @@ export interface EnvSwitcherConfig {
 export class ConfigError extends Error {}
 
 /**
- * Parse and normalise the raw JSON text of `env-switcher.json`. `rootName` names the implicit
+ * Parse and normalise the raw JSON text of `dotenv-switcher.json`. `rootName` names the implicit
  * app of a single repo (the workspace folder name).
  */
 export function parseConfig(text: string, rootName = 'app'): EnvSwitcherConfig {

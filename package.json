@@ -1,5 +1,5 @@
 {
-  "name": "env-switcher",
+  "name": "dotenv-switcher",
   "displayName": "%displayName%",
   "description": "%description%",
   "version": "0.1.0",
@@ -10,13 +10,13 @@
     "color": "#1e3a8a",
     "theme": "dark"
   },
-  "homepage": "https://github.com/lufeasdev/env-switcher#readme",
+  "homepage": "https://github.com/lufeasdev/dotenv-switcher#readme",
   "repository": {
     "type": "git",
-    "url": "https://github.com/lufeasdev/env-switcher.git"
+    "url": "https://github.com/lufeasdev/dotenv-switcher.git"
   },
   "bugs": {
-    "url": "https://github.com/lufeasdev/env-switcher/issues"
+    "url": "https://github.com/lufeasdev/dotenv-switcher/issues"
   },
   "engines": {
     "vscode": "^1.90.0"
@@ -50,52 +50,53 @@
     }
   },
   "activationEvents": [
+    "workspaceContains:dotenv-switcher.json",
     "workspaceContains:env-switcher.json"
   ],
   "contributes": {
     "commands": [
       {
-        "command": "envSwitcher.switch",
+        "command": "dotenvSwitcher.switch",
         "title": "%command.switch.title%",
         "category": "%category%"
       },
       {
-        "command": "envSwitcher.switchApp",
+        "command": "dotenvSwitcher.switchApp",
         "title": "%command.switchApp.title%",
         "category": "%category%"
       },
       {
-        "command": "envSwitcher.showChanges",
+        "command": "dotenvSwitcher.showChanges",
         "title": "%command.showChanges.title%",
         "category": "%category%"
       },
       {
-        "command": "envSwitcher.validate",
+        "command": "dotenvSwitcher.validate",
         "title": "%command.validate.title%",
         "category": "%category%"
       },
       {
-        "command": "envSwitcher.restart",
+        "command": "dotenvSwitcher.restart",
         "title": "%command.restart.title%",
         "category": "%category%"
       },
       {
-        "command": "envSwitcher.resetToDefault",
+        "command": "dotenvSwitcher.resetToDefault",
         "title": "%command.resetToDefault.title%",
         "category": "%category%"
       },
       {
-        "command": "envSwitcher.init",
+        "command": "dotenvSwitcher.init",
         "title": "%command.init.title%",
         "category": "%category%"
       },
       {
-        "command": "envSwitcher.openConfig",
+        "command": "dotenvSwitcher.openConfig",
         "title": "%command.openConfig.title%",
         "category": "%category%"
       },
       {
-        "command": "envSwitcher.addMissingKeys",
+        "command": "dotenvSwitcher.addMissingKeys",
         "title": "%command.addMissingKeys.title%",
         "category": "%category%"
       }
@@ -103,7 +104,7 @@
     "configuration": {
       "title": "%configuration.title%",
       "properties": {
-        "envSwitcher.restartDelayMs": {
+        "dotenvSwitcher.restartDelayMs": {
           "type": "number",
           "default": 300,
           "minimum": 0,
@@ -113,14 +114,18 @@
     },
     "jsonValidation": [
       {
-        "fileMatch": "env-switcher.json",
-        "url": "./schemas/env-switcher.schema.json"
+        "fileMatch": [
+          "dotenv-switcher.json",
+          "env-switcher.json"
+        ],
+        "url": "./schemas/dotenv-switcher.schema.json"
       }
     ],
     "languages": [
       {
         "id": "jsonc",
         "filenames": [
+          "dotenv-switcher.json",
           "env-switcher.json"
         ]
       }

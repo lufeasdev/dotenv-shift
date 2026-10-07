@@ -1,6 +1,6 @@
 import * as vscode from 'vscode';
 import { SETTINGS_SECTION } from '../constants';
-import type { RestartConfig } from '../core/config';
+import { CONFIG_FILE, type RestartConfig } from '../core/config';
 import { errorMessage } from '../core/errors';
 import { resolvePorts } from '../core/ports';
 import { type App, type Project, readDisk } from '../project';
@@ -39,7 +39,7 @@ export class Restarter implements vscode.Disposable {
   async restart(project: Project, previousTexts = new Map<App, string | undefined>(), onlyApps?: App[]): Promise<void> {
     const targets = targetsOf(project).filter((t) => !onlyApps || t.apps.some((app) => onlyApps.includes(app)));
     if (targets.length === 0) {
-      void vscode.window.showWarningMessage(vscode.l10n.t('No "restart.command" is set in env-switcher.json.'));
+      void vscode.window.showWarningMessage(vscode.l10n.t('No "restart.command" is set in {0}.', CONFIG_FILE));
       return;
     }
     // Restart commands come from the workspace, so don't run them (or kill processes) untrusted.
@@ -141,7 +141,7 @@ function targetsOf(project: Project): RestartTarget[] {
     targets.push({
       key: `${folder}::app::${app.name}`,
       config: { ...config, command: config.command },
-      terminalName: config.terminalName ?? `Env Switcher: ${app.name}`,
+      terminalName: config.terminalName ?? `Dotenv Switcher: ${app.name}`,
       cwd: config.cwd ? app.resolve(config.cwd) : app.dirUri,
       apps: [app],
     });
@@ -152,7 +152,7 @@ function targetsOf(project: Project): RestartTarget[] {
     targets.push({
       key: `${folder}::root`,
       config: { ...root, command: root.command },
-      terminalName: root.terminalName ?? `Env Switcher: ${project.name}`,
+      terminalName: root.terminalName ?? `Dotenv Switcher: ${project.name}`,
       cwd: root.cwd ? project.resolve(root.cwd) : project.folder.uri,
       apps: project.apps,
     });

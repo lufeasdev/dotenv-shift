@@ -165,7 +165,7 @@ describe('parseConfig (JSON with comments)', () => {
   it('reports the line of a syntax error', () => {
     expect(() => parseConfig('{\n  "envs": [\n    { "file": ".env.local" }\n  \n')).toThrow(/line \d+/);
     expect(() => parseConfig('{\n  "envs": [ { "file" ".env" } ]\n}')).toThrow(
-      /Invalid JSON in env-switcher\.json \(line 2\)/,
+      /Invalid JSON in dotenv-switcher\.json \(line 2\)/,
     );
   });
 });
