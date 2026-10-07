@@ -3,7 +3,7 @@
   "displayName": "%displayName%",
   "description": "%description%",
   "version": "0.1.0",
-  "publisher": "saeful",
+  "publisher": "lufeasdev",
   "license": "MIT",
   "icon": "media/icon.png",
   "galleryBanner": {
@@ -127,6 +127,7 @@
     ]
   },
   "scripts": {
+    "prepare": "simple-git-hooks",
     "compile": "rolldown -c",
     "watch": "rolldown -c --watch",
     "dev": "pnpm compile && code --new-window --disable-extensions --extensionDevelopmentPath=. ./sample",
@@ -143,17 +144,23 @@
   },
   "devDependencies": {
     "@biomejs/biome": "^2.5.15",
+    "@commitlint/cli": "^21.2.3",
+    "@commitlint/config-conventional": "^21.2.3",
     "@types/node": "^26.6.4",
     "@types/vscode": "1.90.0",
     "@vscode/l10n-dev": "^0.0.35",
     "@vscode/test-electron": "^3.1.0",
     "@vscode/vsce": "^4.0.0",
     "rolldown": "^1.2.12",
+    "simple-git-hooks": "^2.14.0",
     "typescript": "^7.0.2",
     "vitest": "^5.0.3"
   },
   "packageManager": "pnpm@12.9.1",
   "dependencies": {
     "jsonc-parser": "^3.3.1"
+  },
+  "simple-git-hooks": {
+    "commit-msg": "pnpm exec commitlint --edit \"$1\""
   }
 }

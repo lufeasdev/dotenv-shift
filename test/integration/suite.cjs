@@ -75,46 +75,6 @@ test('adds missing keys from the example', async () => {
   });
 });
 
-/** Drives the QuickPick: `steps` is a list of how many times to move down before accepting. */
-async function pickWithKeyboard(command, steps) {
-  const running = vscode.commands.executeCommand(command);
-  for (const [i, downs] of steps.entries()) {
-    // The very first QuickPick of a session takes longer to show up.
-    await new Promise((r) => setTimeout(r, i === 0 ? 1500 : 600));
-    for (let i = 0; i < downs; i++) await vscode.commands.executeCommand('workbench.action.quickOpenSelectNext');
-    await vscode.commands.executeCommand('workbench.action.acceptSelectedQuickOpenItem');
-  }
-  await running;
-}
-
-test('picker: choose "root" first, then an env, switches only the root', async () => {
-  await vscode.commands.executeCommand('envSwitcher.switch', 'Local', folderUri());
-  await eventually(() => assert.equal(read('apps/web/.env'), read('apps/web/.env.local')));
-  // Step 1: All apps, [separator], root -> 1 down. Step 2 for root: Local (active), Staging -> 1 down.
-  await pickWithKeyboard('envSwitcher.switch', [1, 1]);
-  await eventually(() => assert.equal(read('.env'), read('.env.staging')));
-  assert.equal(read('apps/web/.env'), read('apps/web/.env.local'));
-  assert.equal(read('apps/api/.env'), read('apps/api/.env.local'));
-});
-
-test('picker: choose "All apps", then an env, switches every app', async () => {
-  // Step 1: All apps -> 0 down. Step 2: Local, Development, Staging. Apps are mixed now (root on
-  // Staging, the rest on Local), so focus starts at the top -> 2 down.
-  await pickWithKeyboard('envSwitcher.switch', [0, 2]);
-  await eventually(() => {
-    assert.equal(read('.env'), read('.env.staging'));
-    assert.equal(read('apps/web/.env'), read('apps/web/.env.staging'));
-    assert.equal(read('apps/api/.env'), read('apps/api/.env.stage'));
-  });
-});
-
-test('picker: "Switch Environment for One App" lists apps only', async () => {
-  // Step 1: root, web, api -> 2 down. Step 2 for api: Local, Staging (active), Production, Mock -> 2 down from Staging.
-  await pickWithKeyboard('envSwitcher.switchApp', [2, 2]);
-  await eventually(() => assert.equal(read('apps/api/.env'), read('apps/api/.env.mock')));
-  assert.equal(read('apps/web/.env'), read('apps/web/.env.staging'));
-});
-
 test('concurrent switches run one after the other', async () => {
   // Fired together: without serialising, their copies could interleave app by app.
   await Promise.all([
@@ -153,19 +113,18 @@ test('a hand edit keeps the active env and marks the target modified', async () 
   });
 });
 
-test('Show .env Changes > Discard restores the target', async () => {
-  // Actions: Show Diff, Save to <source>, Discard Changes -> 2 down.
-  await pickWithKeyboard('envSwitcher.showChanges', [2]);
+test('Show .env Changes with action "discard" restores the target', async () => {
+  await vscode.commands.executeCommand('envSwitcher.showChanges', { app: 'web', action: 'discard' });
   await eventually(() => {
     assert.equal(read('apps/web/.env'), read('apps/web/.env.production'));
     assert.equal(status('web').modified, false);
   });
 });
 
-test('Show .env Changes > Save copies the edits to the env file', async () => {
+test('Show .env Changes with action "save" copies the edits to the env file', async () => {
   write('apps/web/.env', read('apps/web/.env.production').replace('PORT=8080', 'PORT=8181'));
   await eventually(() => assert.equal(status('web').modified, true));
-  await pickWithKeyboard('envSwitcher.showChanges', [1]);
+  await vscode.commands.executeCommand('envSwitcher.showChanges', { app: 'web', action: 'save' });
   await eventually(() => {
     assert.match(read('apps/web/.env.production'), /^PORT=8181$/m);
     assert.equal(status('web').modified, false);
@@ -188,7 +147,7 @@ function folderUri() {
 let api;
 
 exports.run = async function run() {
-  api = await vscode.extensions.getExtension('saeful.env-switcher').activate();
+  api = await vscode.extensions.getExtension('lufeasdev.env-switcher').activate();
   let failed = 0;
   for (const { name, fn } of tests) {
     try {

@@ -325,12 +325,16 @@ from a desktop often have a minimal `PATH`.
 [
   { "key": "ctrl+alt+e", "command": "envSwitcher.switch" },
   { "key": "ctrl+alt+1", "command": "envSwitcher.switch", "args": "Local" },
-  { "key": "ctrl+alt+m", "command": "envSwitcher.switch", "args": { "env": "Mock", "app": "api" } }
+  { "key": "ctrl+alt+m", "command": "envSwitcher.switch", "args": { "env": "Mock", "app": "api" } },
+  { "key": "ctrl+alt+d", "command": "envSwitcher.showChanges", "args": { "action": "discard" } }
 ]
 ```
 
 The object form takes `env` (title or file), `app` (monorepo: switch only that app) and `folder`
 (a workspace folder URI, for multi-root workspaces).
+
+`envSwitcher.showChanges` takes `{ "action": "diff" | "save" | "discard", "app", "folder" }` to act
+on a hand-edited target without asking.
 
 ## Settings
 
@@ -341,7 +345,7 @@ The object form takes `env` (title or file), `app` (monorepo: switch only that a
 ## API for other extensions
 
 ```ts
-const api = vscode.extensions.getExtension('saeful.env-switcher')?.exports;
+const api = vscode.extensions.getExtension('lufeasdev.env-switcher')?.exports;
 api?.getStatus();
 // { project: 'my-app', apps: [{ name: 'web', env: 'Local', modified: false, changes: undefined }] }
 ```
@@ -380,11 +384,12 @@ again.
 
 - **Unit tests** (`test/*.test.ts`, vitest) cover the env parser, config parsing, key and value
   comparison, port handling (including stopping a real process listening on a port), the
-  project model, the active env store and the session's operation queue. Modules that import
-  `vscode` get a small mock (`test/mocks/vscode.ts`, wired in `vitest.config.ts`).
+  project model, the active env store, the session's operation queue, and the pickers' two-step
+  flow (driven by a fake QuickPick UI). Modules that import `vscode` get a small mock
+  (`test/mocks/vscode.ts`, wired in `vitest.config.ts`).
 - **Integration tests** (`test/integration/`) start VS Code on a temporary copy of
-  `sample-monorepo` (without restarts, so nothing touches your ports) and drive the commands and
-  pickers. Set `VSCODE_EXECUTABLE` to use an installed VS Code, e.g.
+  `sample-monorepo` (without restarts, so nothing touches your ports) and run the commands with
+  arguments, so they don't depend on keyboard timing. Set `VSCODE_EXECUTABLE` to use an installed VS Code, e.g.
   `VSCODE_EXECUTABLE=/usr/share/code/code pnpm test:integration`; otherwise one is downloaded.
 - **CI** (`.github/workflows/ci.yml`) runs typecheck, both test suites and the build on Linux,
   macOS and Windows.
@@ -423,6 +428,29 @@ core/             pure logic with no VS Code dependency (config, env parser, dif
 - Operations that write files go through `session.exclusive()`, so overlapping commands (a
   double-clicked switch, a switch during a discard) run one after the other.
 - Command IDs are in `constants.ts`; `package.json` declares the same IDs.
+
+### Commits
+
+Commits follow [Conventional Commits](https://www.conventionalcommits.org), short and plain:
+
+```
+feat: add per-app envs
+fix: keep crlf when adding keys
+docs: explain monorepo picker
+refactor: split commands from extension
+test: cover concurrent switches
+chore: bump rolldown
+ci: run lint on windows
+```
+
+- Format: `type: what changed`, lower case, at most 72 characters; add a body only when the
+  why isn't obvious.
+- Types: `feat`, `fix`, `docs`, `refactor`, `perf`, `test`, `build`, `ci`, `chore`, `style`,
+  `revert`.
+- No AI co-author trailers.
+
+`pnpm install` sets up a `commit-msg` hook that checks this with commitlint
+(`commitlint.config.mjs`); pull requests are checked in CI too.
 
 ### Localization
 
