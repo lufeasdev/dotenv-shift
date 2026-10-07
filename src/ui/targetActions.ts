@@ -37,11 +37,19 @@ export async function confirmUnsavedTargets(session: ProjectSession, apps: App[]
   return true;
 }
 
+/** What to do with a target edited by hand. */
+export type TargetAction = 'diff' | 'save' | 'discard';
+
 /**
- * Show Diff / Save to the env file / Discard for a target edited by hand: as a notification
- * (right after the edit) or, with `asPicker`, as a QuickPick (from the command).
+ * Show Diff / Save to the env file / Discard for a target edited by hand. `how` is `notify` (a
+ * notification, right after the edit), `pick` (a QuickPick, from the command), or the action
+ * itself (e.g. from a keybinding).
  */
-export async function offerTargetActions(session: ProjectSession, app: App, asPicker: boolean): Promise<void> {
+export async function offerTargetActions(
+  session: ProjectSession,
+  app: App,
+  how: 'notify' | 'pick' | TargetAction,
+): Promise<void> {
   const { project } = session;
   const title = session.active().get(app.name);
   const changes = session.modifiedApps().get(app.name);
@@ -55,7 +63,9 @@ export async function offerTargetActions(session: ProjectSession, app: App, asPi
   const SAVE = vscode.l10n.t('Save to {0}', source);
   const DISCARD = vscode.l10n.t('Discard Changes');
   let choice: string | undefined;
-  if (asPicker) {
+  if (how === 'diff' || how === 'save' || how === 'discard') {
+    choice = { diff: DIFF, save: SAVE, discard: DISCARD }[how];
+  } else if (how === 'pick') {
     const pick = await vscode.window.showQuickPick(
       [
         {

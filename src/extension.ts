@@ -41,7 +41,7 @@ export async function activate(context: vscode.ExtensionContext): Promise<EnvSwi
     validator,
     log,
     onDidChange: refreshUi,
-    onTargetModified: (session, app) => void offerTargetActions(session, app, false).then(refreshUi),
+    onTargetModified: (session, app) => void offerTargetActions(session, app, 'notify').then(refreshUi),
     requestSwitch: async (session, title, apps) => handlers?.doSwitch(session, title, apps),
   });
   handlers = new CommandHandlers({ workspace, validator, restarter, log, refreshUi });

@@ -26,6 +26,24 @@ export class Uri {
   }
 }
 
+export class ThemeIcon {
+  constructor(
+    readonly id: string,
+    readonly color?: ThemeColor,
+  ) {}
+}
+
+export class ThemeColor {
+  constructor(readonly id: string) {}
+}
+
+export enum QuickPickItemKind {
+  Separator = -1,
+  Default = 0,
+}
+
+export const QuickInputButtons = { Back: { iconPath: new ThemeIcon('arrow-left') } };
+
 export const workspace = { textDocuments: [], fs: {} };
 export const window = {};
 export const l10n = {

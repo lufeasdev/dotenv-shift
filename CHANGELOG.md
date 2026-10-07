@@ -19,8 +19,8 @@ First release.
 ### Active env and hand edits
 - The active env is detected by keys and values, so formatting differences don't matter.
 - Hand edits to a target mark it `(modified)` with the changed keys; `Show .env Changes` offers
-  a diff, saving the edits to the env file, or discarding them; switching asks before
-  overwriting edits.
+  a diff, saving the edits to the env file, or discarding them (also as a keybinding with
+  `{ "action": "diff" | "save" | "discard" }`); switching asks before overwriting edits.
 
 ### Restart and ports
 - Restart the app in a dedicated terminal after switching (`restart`), stopping it with Ctrl+C

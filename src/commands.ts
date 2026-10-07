@@ -11,7 +11,7 @@ import { describeProblems, summarize, type Validator } from './services/validato
 import type { ProjectSession } from './session';
 import { formatChanges } from './ui/format';
 import { BACK, pickEnv, pickScopeAndEnv, pickSession } from './ui/pickers';
-import { confirmUnsavedTargets, offerTargetActions } from './ui/targetActions';
+import { confirmUnsavedTargets, offerTargetActions, type TargetAction } from './ui/targetActions';
 import type { Workspace } from './workspace';
 
 export interface CommandDeps {
@@ -21,6 +21,13 @@ export interface CommandDeps {
   log: vscode.LogOutputChannel;
   /** Refreshes the status bar. */
   refreshUi(): void;
+}
+
+/** Arguments of `envSwitcher.showChanges` when bound to a key: `{ "app", "action", "folder" }`. */
+interface ShowChangesArgs {
+  app?: string;
+  action?: TargetAction;
+  folder?: string;
 }
 
 /** Arguments of `envSwitcher.switch` when bound to a key: `{ "env", "app", "folder" }`. */
@@ -53,7 +60,7 @@ export function registerCommands(handlers: CommandHandlers, log: vscode.LogOutpu
         : handlers.switch(env, folderUri, app),
     ),
     register(Commands.switchApp, () => handlers.switchApp()),
-    register(Commands.showChanges, () => handlers.showChanges()),
+    register(Commands.showChanges, (args?: ShowChangesArgs) => handlers.showChanges(args)),
     register(Commands.validate, () => handlers.validate()),
     register(Commands.restart, (folderUri?: string) => handlers.restart(folderUri)),
     register(Commands.resetToDefault, () => handlers.resetToDefault()),
@@ -130,9 +137,13 @@ export class CommandHandlers {
     });
   }
 
-  async showChanges(): Promise<void> {
-    const session = await this.pickSession();
+  /** Reviews hand edits; with `args`, acts on one app's target without asking (keybindings). */
+  async showChanges(args: ShowChangesArgs = {}): Promise<void> {
+    const session = args.folder ? this.deps.workspace.get(args.folder) : await this.pickSession();
     if (!session) return;
+    if (args.action && !['diff', 'save', 'discard'].includes(args.action)) {
+      throw new Error(vscode.l10n.t('Unknown action "{0}"; use diff, save or discard.', args.action));
+    }
     await session.refreshModified();
     const modified = session.modifiedApps();
     if (modified.size === 0) {
@@ -140,7 +151,8 @@ export class CommandHandlers {
       return;
     }
 
-    const apps = session.project.apps.filter((app) => modified.has(app.name));
+    const apps = session.project.apps.filter((app) => modified.has(app.name) && (!args.app || app.name === args.app));
+    if (apps.length === 0) return;
     let app: App | undefined = apps[0];
     if (apps.length > 1) {
       const pick = await vscode.window.showQuickPick(
@@ -154,7 +166,7 @@ export class CommandHandlers {
       );
       app = pick?.app;
     }
-    if (app) await offerTargetActions(session, app, true);
+    if (app) await offerTargetActions(session, app, args.action ?? 'pick');
     this.deps.refreshUi();
   }
 

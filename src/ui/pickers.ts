@@ -11,6 +11,15 @@ export const BACK = Symbol('back');
 type EnvPickItem = vscode.QuickPickItem & { title: string; description: string };
 export type Scope = 'all' | App;
 
+/** The QuickPick functions the pickers use; `vscode.window` in the extension, a fake in tests. */
+export interface PickerUi {
+  showQuickPick<T extends vscode.QuickPickItem>(
+    items: readonly T[],
+    options?: vscode.QuickPickOptions,
+  ): Thenable<T | undefined>;
+  createQuickPick<T extends vscode.QuickPickItem>(): vscode.QuickPick<T>;
+}
+
 /**
  * The project to act on: the only one, or one the user picks. Without any, offers `onCreate`
  * (creating a config).
@@ -52,16 +61,17 @@ export async function pickScopeAndEnv(
   session: ProjectSession,
   statuses: EnvStatus[],
   allowAll: boolean,
+  ui: PickerUi = vscode.window,
 ): Promise<{ title: string; apps?: App[] } | undefined> {
   const { project } = session;
   if (!project.config.monorepo) {
-    const title = await pickEnv(session, statuses, 'all', false);
+    const title = await pickEnv(session, statuses, 'all', false, ui);
     return title === undefined || title === BACK ? undefined : { title };
   }
   for (;;) {
-    const scope = project.apps.length === 1 && !allowAll ? project.apps[0] : await pickScope(session, allowAll);
+    const scope = project.apps.length === 1 && !allowAll ? project.apps[0] : await pickScope(session, allowAll, ui);
     if (!scope) return undefined;
-    const title = await pickEnv(session, statuses, scope, project.apps.length > 1 || allowAll);
+    const title = await pickEnv(session, statuses, scope, project.apps.length > 1 || allowAll, ui);
     if (title === BACK) continue;
     if (title === undefined) return undefined;
     return { title, apps: scope === 'all' ? undefined : [scope] };
@@ -69,7 +79,7 @@ export async function pickScopeAndEnv(
 }
 
 /** Step 1 (monorepo): all apps, or one app. */
-async function pickScope(session: ProjectSession, allowAll: boolean): Promise<Scope | undefined> {
+async function pickScope(session: ProjectSession, allowAll: boolean, ui: PickerUi): Promise<Scope | undefined> {
   const { project } = session;
   const active = session.active();
   const summary = session.activeSummary();
@@ -98,7 +108,7 @@ async function pickScope(session: ProjectSession, allowAll: boolean): Promise<Sc
     });
   }
 
-  const pick = await vscode.window.showQuickPick(items, {
+  const pick = await ui.showQuickPick(items, {
     title: vscode.l10n.t('Switch Environment ({0}): 1/2', project.name),
     placeHolder: vscode.l10n.t('Switch all apps, or pick one app'),
     matchOnDescription: true,
@@ -115,6 +125,7 @@ export async function pickEnv(
   statuses: EnvStatus[],
   scope: Scope,
   withBack: boolean,
+  ui: PickerUi = vscode.window,
 ): Promise<string | typeof BACK | undefined> {
   const { project } = session;
   const monorepo = project.config.monorepo;
@@ -147,7 +158,7 @@ export async function pickEnv(
     heading = scope.name;
   }
 
-  const quickPick = vscode.window.createQuickPick<EnvPickItem>();
+  const quickPick = ui.createQuickPick<EnvPickItem>();
   quickPick.title = monorepo
     ? vscode.l10n.t('Switch Environment ({0}): 2/2, {1}', project.name, heading)
     : vscode.l10n.t('Switch Environment ({0})', project.name);
