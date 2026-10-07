@@ -1,0 +1,36 @@
+{
+  "target": ".env",
+  "example": ".env.example",
+  "default": "Local",
+  "envs": [
+    {
+      "title": "Local",
+      "description": "Local Postgres, debug logging on",
+      "file": ".env.local"
+    },
+    {
+      "title": "Development",
+      "description": "Shared dev database and API",
+      "file": ".env.development"
+    },
+    {
+      "title": "Staging",
+      "description": "Staging database and API, shared with QA",
+      "file": ".env.staging"
+    },
+    {
+      "title": "Production",
+      "description": "Live database - handle with care",
+      "file": ".env.production",
+      "confirm": true
+    }
+  ],
+  "restart": {
+    "enabled": true,
+    "command": "node server.js",
+    "killPorts": [
+      "PORT"
+    ],
+    "mode": "auto"
+  }
+}

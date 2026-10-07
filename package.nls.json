@@ -1,0 +1,18 @@
+{
+  "capabilities.untrustedWorkspaces.description": "Restarting the app and freeing ports are disabled in Restricted Mode, because restart commands come from the workspace's env-switcher.json. Switching and validating env files still work.",
+  "capabilities.virtualWorkspaces.description": "Env Switcher reads and copies local files and manages local processes.",
+  "category": "Env Switcher",
+  "command.addMissingKeys.title": "Add Missing Keys to Env File",
+  "command.init.title": "Create Config (env-switcher.json)",
+  "command.openConfig.title": "Open Config",
+  "command.resetToDefault.title": "Reset to Default Environment",
+  "command.restart.title": "Restart App",
+  "command.showChanges.title": "Show .env Changes",
+  "command.switch.title": "Switch Environment",
+  "command.switchApp.title": "Switch Environment for One App",
+  "command.validate.title": "Validate Env Files",
+  "configuration.restartDelayMs.description": "Delay (ms) between sending Ctrl+C and re-running the restart command.",
+  "configuration.title": "Env Switcher",
+  "description": "Switch .env files per project or monorepo app from a JSON config, validate keys against .env.example, track hand edits, and restart your app (freeing its ports) instantly.",
+  "displayName": "Env Switcher"
+}

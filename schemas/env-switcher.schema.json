@@ -1,0 +1,192 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "title": "Env Switcher config",
+  "type": "object",
+  "additionalProperties": false,
+  "properties": {
+    "$schema": {
+      "type": "string"
+    },
+    "target": {
+      "type": "string",
+      "default": ".env",
+      "description": "File the selected env is copied to. In a monorepo, relative to each app's dir."
+    },
+    "example": {
+      "type": "string",
+      "examples": [".env.example"],
+      "description": "Reference env file; every env must contain all of its keys. In a monorepo, relative to each app's dir."
+    },
+    "envs": {
+      "type": "array",
+      "minItems": 1,
+      "description": "Shared environments: picking one switches every app that has it. Required for a single repo; in a monorepo each file is looked up inside every app's dir.",
+      "items": {
+        "$ref": "#/definitions/env"
+      }
+    },
+    "default": {
+      "type": "string",
+      "description": "Title or file of the env to apply automatically when the target (e.g. .env) doesn't exist yet, such as after a fresh clone. Envs with \"confirm\": true are never applied automatically.",
+      "examples": ["Local", ".env.local"]
+    },
+    "restart": {
+      "allOf": [
+        {
+          "$ref": "#/definitions/restart"
+        }
+      ],
+      "description": "Single repo: restarts the app. Monorepo: a command run from the root (e.g. \"pnpm turbo dev\"), with ports read from every app's env."
+    },
+    "apps": {
+      "type": "array",
+      "minItems": 1,
+      "description": "Monorepo: apps whose env files are switched together. Omit for a single repo.",
+      "items": {
+        "type": "object",
+        "required": ["dir"],
+        "additionalProperties": false,
+        "properties": {
+          "name": {
+            "type": "string",
+            "description": "Name shown in messages and the terminal title. Defaults to the last folder of dir."
+          },
+          "dir": {
+            "type": "string",
+            "description": "App folder, relative to the workspace folder. Use \".\" to include env files at the repo root.",
+            "examples": ["apps/web", "apps/api"]
+          },
+          "target": {
+            "type": "string",
+            "description": "Overrides the top-level target for this app (relative to dir)."
+          },
+          "example": {
+            "type": "string",
+            "description": "Overrides the top-level example for this app (relative to dir)."
+          },
+          "restart": {
+            "allOf": [
+              {
+                "$ref": "#/definitions/restart"
+              }
+            ],
+            "description": "Restarts this app in its own terminal; cwd defaults to dir."
+          },
+          "envs": {
+            "type": "array",
+            "description": "Per-app envs. An entry whose title matches a shared env overrides it (set \"file\": null to leave this app out of that env); any other entry is an env only this app has.",
+            "items": {
+              "type": "object",
+              "required": ["title"],
+              "additionalProperties": false,
+              "properties": {
+                "title": {
+                  "type": "string",
+                  "description": "A shared env's title to override, or a new title for an app-only env."
+                },
+                "file": {
+                  "type": ["string", "null"],
+                  "description": "Env file relative to the app's dir; null leaves this app out of the shared env."
+                },
+                "description": {
+                  "type": "string",
+                  "description": "Overrides the shared env's description, or describes an app-only env."
+                },
+                "confirm": {
+                  "type": "boolean",
+                  "description": "Overrides the shared env's confirm, or sets it for an app-only env."
+                }
+              }
+            }
+          }
+        }
+      }
+    }
+  },
+  "definitions": {
+    "restart": {
+      "type": "object",
+      "additionalProperties": false,
+      "description": "Restart the app in a dedicated terminal after switching. Stops it (Ctrl+C or closing the terminal), frees its ports, then runs the command.",
+      "properties": {
+        "enabled": {
+          "type": "boolean",
+          "default": true,
+          "description": "Set to false to turn restarting off without removing the command. Defaults to true when a command is set."
+        },
+        "command": {
+          "type": "string",
+          "examples": ["pnpm dev", "npm run dev", "php artisan serve"],
+          "description": "Command that starts the app, run in the app terminal."
+        },
+        "terminalName": {
+          "type": "string",
+          "description": "Name of the app terminal. Defaults to \"Env Switcher: <app or folder name>\"."
+        },
+        "cwd": {
+          "type": "string",
+          "description": "Working directory: relative to the workspace folder, or to the app's dir for a restart inside \"apps\". Defaults to that folder."
+        },
+        "startIfNotRunning": {
+          "type": "boolean",
+          "default": true,
+          "description": "Start the command when the app terminal isn't open yet."
+        },
+        "killPorts": {
+          "type": "array",
+          "default": ["PORT"],
+          "description": "Ports to free before starting the app. Each item is a port number or the name of an env key that holds one; keys are read from both the previous and the new env. Use [] to disable.",
+          "items": {
+            "anyOf": [
+              {
+                "type": "integer",
+                "minimum": 1,
+                "maximum": 65535
+              },
+              {
+                "type": "string",
+                "pattern": "^[A-Za-z_][A-Za-z0-9_.-]*$"
+              }
+            ]
+          },
+          "examples": [["PORT"], [3000, "VITE_PORT"]]
+        },
+        "mode": {
+          "type": "string",
+          "enum": ["auto", "ctrlC", "recreate"],
+          "default": "auto",
+          "enumDescriptions": [
+            "recreate on Windows, ctrlC on macOS/Linux",
+            "Send Ctrl+C to the app terminal and reuse it (keeps scrollback)",
+            "Close the app terminal (kills its process tree) and open a new one"
+          ],
+          "description": "How the running app is stopped before restarting."
+        }
+      }
+    },
+    "env": {
+      "type": "object",
+      "required": ["file"],
+      "additionalProperties": false,
+      "properties": {
+        "title": {
+          "type": "string",
+          "description": "Name shown in the picker and status bar. Envs with the same title are switched together across apps. Defaults to the file name."
+        },
+        "description": {
+          "type": "string",
+          "description": "Short note shown under the title in the picker and in the status bar tooltip (e.g. which database or API it points to)."
+        },
+        "file": {
+          "type": "string",
+          "description": "Env file: relative to the workspace folder, or to each app's dir in a monorepo."
+        },
+        "confirm": {
+          "type": "boolean",
+          "default": false,
+          "description": "Ask for confirmation before switching (e.g. production)."
+        }
+      }
+    }
+  }
+}

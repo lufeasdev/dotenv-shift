@@ -1,0 +1,25 @@
+{
+  "version": "0.2.0",
+  "configurations": [
+    {
+      "name": "Run Extension (sample)",
+      "type": "extensionHost",
+      "request": "launch",
+      "args": ["--disable-extensions", "--extensionDevelopmentPath=${workspaceFolder}", "${workspaceFolder}/sample"],
+      "outFiles": ["${workspaceFolder}/dist/**/*.js"],
+      "preLaunchTask": "pnpm: compile"
+    },
+    {
+      "name": "Run Extension (sample-monorepo)",
+      "type": "extensionHost",
+      "request": "launch",
+      "args": [
+        "--disable-extensions",
+        "--extensionDevelopmentPath=${workspaceFolder}",
+        "${workspaceFolder}/sample-monorepo"
+      ],
+      "outFiles": ["${workspaceFolder}/dist/**/*.js"],
+      "preLaunchTask": "pnpm: compile"
+    }
+  ]
+}

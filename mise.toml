@@ -1,0 +1,4 @@
+# Tool versions for development and CI (https://mise.jdx.dev). Run `mise install` once.
+[tools]
+node = "24"
+pnpm = "12.9.1"

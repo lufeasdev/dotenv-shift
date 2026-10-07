@@ -1,0 +1,21 @@
+{
+  "example": ".env.example",
+  "default": "Local",
+  "envs": [
+    { "title": "Local", "description": "Everything on localhost", "file": ".env.local" },
+    { "title": "Development", "description": "Shared dev services", "file": ".env.development" },
+    { "title": "Staging", "description": "Staging services, shared with QA", "file": ".env.staging" },
+    { "title": "Production", "description": "Live services - handle with care", "file": ".env.production", "confirm": true }
+  ],
+  "apps": [
+    { "name": "root", "dir": "." },
+    { "dir": "apps/web", "restart": { "command": "node server.js" } },
+    {
+      "dir": "apps/api",
+      "restart": { "command": "node server.js" },
+      "envs": [
+        { "title": "Mock", "description": "In-memory database, no external services", "file": ".env.mock" }
+      ]
+    }
+  ]
+}

@@ -1,0 +1,159 @@
+{
+  "name": "env-switcher",
+  "displayName": "%displayName%",
+  "description": "%description%",
+  "version": "0.1.0",
+  "publisher": "saeful",
+  "license": "MIT",
+  "icon": "media/icon.png",
+  "galleryBanner": {
+    "color": "#1e3a8a",
+    "theme": "dark"
+  },
+  "homepage": "https://github.com/lufeasdev/env-switcher#readme",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/lufeasdev/env-switcher.git"
+  },
+  "bugs": {
+    "url": "https://github.com/lufeasdev/env-switcher/issues"
+  },
+  "engines": {
+    "vscode": "^1.90.0"
+  },
+  "categories": [
+    "Other"
+  ],
+  "keywords": [
+    "env",
+    "dotenv",
+    ".env",
+    "environment",
+    "switcher",
+    "monorepo",
+    "restart",
+    "port"
+  ],
+  "main": "./dist/extension.js",
+  "l10n": "./l10n",
+  "extensionKind": [
+    "workspace"
+  ],
+  "capabilities": {
+    "untrustedWorkspaces": {
+      "supported": "limited",
+      "description": "%capabilities.untrustedWorkspaces.description%"
+    },
+    "virtualWorkspaces": {
+      "supported": false,
+      "description": "%capabilities.virtualWorkspaces.description%"
+    }
+  },
+  "activationEvents": [
+    "workspaceContains:env-switcher.json"
+  ],
+  "contributes": {
+    "commands": [
+      {
+        "command": "envSwitcher.switch",
+        "title": "%command.switch.title%",
+        "category": "%category%"
+      },
+      {
+        "command": "envSwitcher.switchApp",
+        "title": "%command.switchApp.title%",
+        "category": "%category%"
+      },
+      {
+        "command": "envSwitcher.showChanges",
+        "title": "%command.showChanges.title%",
+        "category": "%category%"
+      },
+      {
+        "command": "envSwitcher.validate",
+        "title": "%command.validate.title%",
+        "category": "%category%"
+      },
+      {
+        "command": "envSwitcher.restart",
+        "title": "%command.restart.title%",
+        "category": "%category%"
+      },
+      {
+        "command": "envSwitcher.resetToDefault",
+        "title": "%command.resetToDefault.title%",
+        "category": "%category%"
+      },
+      {
+        "command": "envSwitcher.init",
+        "title": "%command.init.title%",
+        "category": "%category%"
+      },
+      {
+        "command": "envSwitcher.openConfig",
+        "title": "%command.openConfig.title%",
+        "category": "%category%"
+      },
+      {
+        "command": "envSwitcher.addMissingKeys",
+        "title": "%command.addMissingKeys.title%",
+        "category": "%category%"
+      }
+    ],
+    "configuration": {
+      "title": "%configuration.title%",
+      "properties": {
+        "envSwitcher.restartDelayMs": {
+          "type": "number",
+          "default": 300,
+          "minimum": 0,
+          "description": "%configuration.restartDelayMs.description%"
+        }
+      }
+    },
+    "jsonValidation": [
+      {
+        "fileMatch": "env-switcher.json",
+        "url": "./schemas/env-switcher.schema.json"
+      }
+    ],
+    "languages": [
+      {
+        "id": "jsonc",
+        "filenames": [
+          "env-switcher.json"
+        ]
+      }
+    ]
+  },
+  "scripts": {
+    "compile": "rolldown -c",
+    "watch": "rolldown -c --watch",
+    "dev": "pnpm compile && code --new-window --disable-extensions --extensionDevelopmentPath=. ./sample",
+    "dev:monorepo": "pnpm compile && code --new-window --disable-extensions --extensionDevelopmentPath=. ./sample-monorepo",
+    "typecheck": "tsc --noEmit",
+    "test": "vitest run",
+    "test:integration": "pnpm compile && node test/integration/runTest.mjs",
+    "vscode:prepublish": "rolldown -c",
+    "package": "vsce package --no-dependencies",
+    "lint": "biome check .",
+    "format": "biome check --write .",
+    "check": "pnpm typecheck && pnpm lint && pnpm test",
+    "l10n": "vscode-l10n-dev export --outDir ./l10n ./src"
+  },
+  "devDependencies": {
+    "@biomejs/biome": "^2.5.15",
+    "@types/node": "^26.6.4",
+    "@types/vscode": "1.90.0",
+    "@vscode/l10n-dev": "^0.0.35",
+    "@vscode/test-electron": "^3.1.0",
+    "@vscode/vsce": "^4.0.0",
+    "rolldown": "^1.2.12",
+    "typescript": "^7.0.2",
+    "vitest": "^5.0.3"
+  },
+  "packageManager": "pnpm@12.9.1",
+  "dependencies": {
+    "jsonc-parser": "^3.3.1"
+  }
+}
