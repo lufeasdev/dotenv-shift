@@ -28,6 +28,7 @@ const TARGET_SETTLE_MS = 150;
 export class ProjectSession implements vscode.Disposable {
   private readonly watchers: vscode.Disposable[] = [];
   private modified = new Map<string, EnvChanges>();
+  private readonly drifted = new Map<string, string>();
   private revalidateTimer: ReturnType<typeof setTimeout> | undefined;
   private readonly targetTimers = new Map<string, ReturnType<typeof setTimeout>>();
   private queue: Promise<unknown> = Promise.resolve();
@@ -61,14 +62,19 @@ export class ProjectSession implements vscode.Disposable {
 
     await this.applyDefault();
 
-    // Recover active envs from file contents where nothing (valid) is recorded.
-    const recovered = store.get(this.project);
+    // Recover active envs, or flag drifted targets when disk matches another env.
+    // In-memory drifted tracking resets on reload; persist drift timestamp or prompt banner if users ignore status bar.
+    const current = store.get(this.project);
     for (const app of this.project.apps) {
-      if (recovered.has(app.name)) continue;
-      const title = await detectAppEnv(app);
-      if (title) recovered.set(app.name, title);
+      const detected = await detectAppEnv(app);
+      const recorded = current.get(app.name);
+      if (!recorded && detected) {
+        current.set(app.name, detected);
+      } else if (recorded && detected && detected !== recorded) {
+        this.drifted.set(app.name, detected);
+      }
     }
-    await store.save(this.project, recovered);
+    await store.save(this.project, current);
     await this.refreshModified();
 
     const apps = this.project.config.monorepo ? `, ${this.project.apps.length} app(s)` : '';
@@ -104,8 +110,14 @@ export class ProjectSession implements vscode.Disposable {
   }
 
   async setActive(apps: App[], title: string | undefined): Promise<void> {
+    for (const app of apps) this.drifted.delete(app.name);
     await this.host.store.set(this.project, apps, title);
     this.host.onDidChange();
+  }
+
+  /** Apps whose target matches another valid env on disk instead of the recorded active env. */
+  driftedApps(): ReadonlyMap<string, string> {
+    return this.drifted;
   }
 
   // ---------------------------------------------------------------- hand edits
@@ -223,10 +235,18 @@ export class ProjectSession implements vscode.Disposable {
    */
   private async syncTarget(app: App): Promise<void> {
     if ((await readDisk(app.targetUri)) === undefined) {
+      this.drifted.delete(app.name);
       if (this.active().has(app.name)) await this.setActive([app], undefined);
     } else {
-      const title = await detectAppEnv(app);
-      if (title && title !== this.active().get(app.name)) await this.setActive([app], title);
+      const detected = await detectAppEnv(app);
+      const recorded = this.active().get(app.name);
+      if (!recorded && detected) {
+        await this.setActive([app], detected);
+      } else if (recorded && detected && detected !== recorded) {
+        this.drifted.set(app.name, detected);
+      } else {
+        this.drifted.delete(app.name);
+      }
     }
     await this.refreshModified([app]);
     this.host.onDidChange();

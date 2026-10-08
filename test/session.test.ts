@@ -14,6 +14,24 @@ function session() {
 
 const tick = (ms: number) => new Promise((r) => setTimeout(r, ms));
 
+describe('ProjectSession.driftedApps', () => {
+  it('clears drifted state when setActive is called', async () => {
+    const s = session();
+    const app = s.project.apps[0];
+    (s as unknown as { drifted: Map<string, string> }).drifted.set(app.name, 'Other');
+    expect(s.driftedApps().get(app.name)).toBe('Other');
+
+    const store = { set: async () => {} };
+    (s as unknown as { host: { store: unknown; onDidChange: () => void } }).host = {
+      store,
+      onDidChange: () => {},
+    };
+
+    await s.setActive([app], 'Other');
+    expect(s.driftedApps().has(app.name)).toBe(false);
+  });
+});
+
 describe('ProjectSession.exclusive', () => {
   it('runs tasks one after the other, in order', async () => {
     const s = session();

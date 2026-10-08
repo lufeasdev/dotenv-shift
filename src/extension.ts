@@ -13,7 +13,7 @@ import { Workspace } from './workspace';
 
 export interface DotenvShiftStatus {
   project: string;
-  apps: { name: string; env?: string; modified: boolean; changes?: EnvChanges }[];
+  apps: { name: string; env?: string; drifted?: string; modified: boolean; changes?: EnvChanges }[];
 }
 export type DotenvSwitcherStatus = DotenvShiftStatus;
 export type EnvSwitcherStatus = DotenvShiftStatus;
@@ -78,11 +78,13 @@ export async function activate(context: vscode.ExtensionContext): Promise<Dotenv
       if (!session) return undefined;
       const active = session.active();
       const modified = session.modifiedApps();
+      const drifted = session.driftedApps();
       return {
         project: session.name,
         apps: session.project.apps.map((app) => ({
           name: app.name,
           env: active.get(app.name),
+          drifted: drifted.get(app.name),
           modified: modified.has(app.name),
           changes: modified.get(app.name),
         })),

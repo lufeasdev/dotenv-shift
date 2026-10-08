@@ -15,7 +15,7 @@ export interface StatusBarState {
   /** Apps are on different envs. */
   mixed: boolean;
   /** Active env per app, and how its target was edited by hand (if it was). */
-  perApp: { name: string; title?: string; changes?: EnvChanges; target: string }[];
+  perApp: { name: string; title?: string; drifted?: string; changes?: EnvChanges; target: string }[];
   /** Keys missing from the active env files. */
   activeMissing: number;
   /** Env files that are incomplete or missing. */
@@ -37,27 +37,45 @@ export class EnvStatusBar implements vscode.Disposable {
     }
     const { projectName, activeTitle, mixed, activeMissing: missing, problemFiles: problems } = state;
 
-    const edited = state.perApp.filter((app) => app.changes);
-    const label = mixed ? vscode.l10n.t('Mixed') : (activeTitle ?? vscode.l10n.t('No env'));
+    const drifted = state.perApp.filter((app) => app.drifted);
+    const edited = state.perApp.filter((app) => app.changes && !app.drifted);
     const modifiedLabel = vscode.l10n.t('(modified)');
-    this.item.text = `$(symbol-variable) ${label}${edited.length ? ` ${modifiedLabel}` : ''}${missing ? ` $(warning) ${missing}` : ''}`;
+    const driftLabel =
+      drifted.length === 1 && !mixed ? `${activeTitle ?? vscode.l10n.t('No env')} → ${drifted[0].drifted}?` : undefined;
+    const label = driftLabel ?? (mixed ? vscode.l10n.t('Mixed') : (activeTitle ?? vscode.l10n.t('No env')));
+    const modSuffix = !driftLabel && drifted.length ? ` ${vscode.l10n.t('(drifted)')}` : '';
+    this.item.text = `$(symbol-variable) ${label}${modSuffix}${edited.length ? ` ${modifiedLabel}` : ''}${missing ? ` $(warning) ${missing}` : ''}`;
 
     const tooltip = new vscode.MarkdownString(undefined, true);
     tooltip.isTrusted = { enabledCommands: [Commands.showChanges] };
     tooltip.appendMarkdown(`**${DISPLAY_NAME}** — ${projectName}\n\n`);
     if (state.monorepo) {
       for (const app of state.perApp) {
-        tooltip.appendMarkdown(
-          `- ${app.name}: **${app.title ?? vscode.l10n.t('none')}**${app.changes ? ` ${modifiedLabel}` : ''}\n`,
-        );
+        const drift = app.drifted ? ` → **${app.drifted}?**` : '';
+        const mod = app.changes && !app.drifted ? ` ${modifiedLabel}` : '';
+        tooltip.appendMarkdown(`- ${app.name}: **${app.title ?? vscode.l10n.t('none')}**${drift}${mod}\n`);
       }
       tooltip.appendMarkdown('\n');
     } else {
-      tooltip.appendMarkdown(
-        activeTitle
-          ? `${vscode.l10n.t('Active: {0}', `**${activeTitle}**`)}${edited.length ? ` ${modifiedLabel}` : ''}\n\n`
-          : `${vscode.l10n.t('No active env')}\n\n`,
-      );
+      const single = state.perApp[0];
+      if (single?.drifted) {
+        tooltip.appendMarkdown(
+          `${vscode.l10n.t('Active: {0}', `**${activeTitle}**`)} → ${vscode.l10n.t('matches {0}', `**${single.drifted}**`)}?\n\n`,
+        );
+      } else {
+        tooltip.appendMarkdown(
+          activeTitle
+            ? `${vscode.l10n.t('Active: {0}', `**${activeTitle}**`)}${edited.length ? ` ${modifiedLabel}` : ''}\n\n`
+            : `${vscode.l10n.t('No active env')}\n\n`,
+        );
+      }
+    }
+    if (drifted.length) {
+      tooltip.appendMarkdown(`$(sync) ${vscode.l10n.t('Target matches another environment on disk:')}\n\n`);
+      for (const app of drifted) {
+        tooltip.appendText(`${app.target}: ${app.title ?? 'none'} → ${app.drifted}\n`);
+      }
+      tooltip.appendMarkdown(`\n[${vscode.l10n.t('Switch environment')}](command:${Commands.switch})\n\n`);
     }
     if (edited.length) {
       tooltip.appendMarkdown(`$(edit) ${vscode.l10n.t('Edited by hand, not saved to the env file:')}\n\n`);
@@ -72,7 +90,7 @@ export class EnvStatusBar implements vscode.Disposable {
     this.item.tooltip = tooltip;
 
     this.item.backgroundColor =
-      missing || edited.length ? new vscode.ThemeColor('statusBarItem.warningBackground') : undefined;
+      missing || edited.length || drifted.length ? new vscode.ThemeColor('statusBarItem.warningBackground') : undefined;
     this.item.show();
   }
 
@@ -87,6 +105,7 @@ export function statusBarState(session: ProjectSession, validator: Validator): S
   const active = session.active();
   const summary = session.activeSummary();
   const modified = session.modifiedApps();
+  const drifted = session.driftedApps();
   const statuses = validator.getStatuses(project);
 
   let activeMissing = 0;
@@ -103,6 +122,7 @@ export function statusBarState(session: ProjectSession, validator: Validator): S
     perApp: project.apps.map((app) => ({
       name: app.name,
       title: active.get(app.name),
+      drifted: drifted.get(app.name),
       changes: modified.get(app.name),
       target: relative(project, app.targetUri),
     })),
