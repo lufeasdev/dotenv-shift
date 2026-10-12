@@ -250,7 +250,12 @@ Files are re-validated as you edit them.
 
 The active env is the one whose file has the **same keys and values** as the target. Comments,
 spacing, quoting and order don't matter, so a reformatted copy of `.env.staging` still counts as
-Staging. If `.env` is replaced by another env's content, the active env follows it.
+Staging. When several env files are identical, the one you switched to stays active.
+
+If `.env` is replaced by another env's content (e.g. `cp .env.production .env` in a terminal),
+the status bar shows `Local → Production?` and a notification offers **Use Production**, which
+makes it the active env without copying files or restarting. When no env was active yet, the
+detected one becomes active directly.
 
 When `.env` is edited and saved so that it matches no env:
 
@@ -290,7 +295,10 @@ soon as the project opens:
 Restart commands come from the workspace's `dotenv-shift.json`. In
 [Restricted Mode](https://code.visualstudio.com/docs/editor/workspace-trust) (an untrusted
 workspace), restarting and freeing ports are disabled; switching and validating env files still
-work. Env values are never written to the log or shown in messages, only key names.
+work, but only for files inside the workspace folder: a `target`, `file` or `example` path that
+leads outside it (an absolute path, `..`, or a symlink) is never written, and the default env
+isn't applied to such a target. Env values are never written to the log or shown in messages,
+only key names.
 
 ## Platform support
 
@@ -354,8 +362,9 @@ api?.getStatus();
 // { project: 'my-app', apps: [{ name: 'web', env: 'Local', modified: false, changes: undefined }] }
 ```
 
-`getStatus(folderUri?)` returns each app's active env and whether its target was edited by hand
-(with the changed, added and removed keys).
+`getStatus(folderUri?)` returns each app's active env, whether its target was edited by hand
+(with the changed, added and removed keys), and `drifted`: the env the target matches instead,
+when it was replaced with another env's content.
 
 ## Contributing
 

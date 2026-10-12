@@ -25,20 +25,22 @@ export function parseEnv(text: string): EnvEntry[] {
     let value: string;
 
     const quote = QUOTES.find((q) => raw.startsWith(q));
-    if (quote) {
-      // Find the closing quote, possibly on a later line (multiline value).
-      let body = raw.slice(1);
-      let close = findClosingQuote(body, quote);
-      while (close === -1 && i + 1 < lines.length) {
-        i++;
-        body += `\n${lines[i]}`;
-        close = findClosingQuote(body, quote);
-      }
-      if (close === -1) close = body.length;
+    // Find the closing quote, possibly on a later line (multiline value).
+    let body = quote ? raw.slice(1) : '';
+    let end = i;
+    let close = quote ? findClosingQuote(body, quote) : -1;
+    while (quote && close === -1 && end + 1 < lines.length) {
+      end++;
+      body += `\n${lines[end]}`;
+      close = findClosingQuote(body, quote);
+    }
+    if (quote && close !== -1) {
+      i = end;
       value = body.slice(0, close);
       raw = quote + body.slice(0, close + 1);
     } else {
-      // Unquoted: strip inline comment (" #...").
+      // Unquoted, or a quote that's never closed: like dotenv, a single-line value (so a typo
+      // doesn't swallow the rest of the file), without its inline comment (" #...").
       const hash = raw.search(/\s#/);
       if (hash !== -1) raw = raw.slice(0, hash).trimEnd();
       value = raw;

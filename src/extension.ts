@@ -2,13 +2,14 @@ import * as vscode from 'vscode';
 import { CommandHandlers, registerCommands } from './commands';
 import { DISPLAY_NAME } from './constants';
 import type { EnvChanges } from './core/diff';
+import { errorMessage } from './core/errors';
 import { missingKeys } from './services/fixer';
 import { Restarter } from './services/restarter';
 import { Validator } from './services/validator';
 import { ActiveEnvStore } from './state';
 import { MissingKeyQuickFix } from './ui/quickFix';
 import { EnvStatusBar, statusBarState } from './ui/statusBar';
-import { offerTargetActions } from './ui/targetActions';
+import { offerDriftActions, offerTargetActions } from './ui/targetActions';
 import { Workspace } from './workspace';
 
 export interface DotenvShiftStatus {
@@ -37,6 +38,11 @@ export async function activate(context: vscode.ExtensionContext): Promise<Dotenv
     const session = workspace.current();
     statusBar.update(session && statusBarState(session, validator));
   };
+  // Notification follow-ups run outside any command, so report their failures here.
+  const reportError = (err: unknown) => {
+    log.error(errorMessage(err));
+    void vscode.window.showErrorMessage(errorMessage(err));
+  };
   // Commands are created after the workspace, but the workspace can ask for a switch while loading.
   let handlers: CommandHandlers | undefined;
 
@@ -45,7 +51,10 @@ export async function activate(context: vscode.ExtensionContext): Promise<Dotenv
     validator,
     log,
     onDidChange: refreshUi,
-    onTargetModified: (session, app) => void offerTargetActions(session, app, 'notify').then(refreshUi),
+    onTargetModified: (session, app) =>
+      void offerTargetActions(session, app, 'notify').then(refreshUi).catch(reportError),
+    onTargetDrifted: (session, app, detected) =>
+      void offerDriftActions(session, app, detected).then(refreshUi).catch(reportError),
     requestSwitch: async (session, title, apps) => handlers?.doSwitch(session, title, apps),
   });
   handlers = new CommandHandlers({ workspace, validator, restarter, log, refreshUi });

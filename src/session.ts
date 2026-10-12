@@ -14,17 +14,19 @@ export interface SessionHost {
   onDidChange(): void;
   /** A target was just edited by hand so it no longer matches its active env. */
   onTargetModified(session: ProjectSession, app: App): void;
+  /** A target was just replaced with the content of another env (`detected`) than the active one. */
+  onTargetDrifted(session: ProjectSession, app: App, detected: string): void;
   /** The default env needs confirmation; the user asked to switch to it. */
   requestSwitch(session: ProjectSession, title: string, apps: App[]): Promise<void>;
 }
+
+/** How long a target must be quiet before it's re-read (a write may truncate first). */
+const TARGET_SETTLE_MS = 150;
 
 /**
  * A loaded project and everything that lives as long as it does: file watchers, which targets
  * were edited by hand, pending revalidation, and a queue that serialises file-changing operations.
  */
-/** How long a target must be quiet before it's re-read (a write may truncate first). */
-const TARGET_SETTLE_MS = 150;
-
 export class ProjectSession implements vscode.Disposable {
   private readonly watchers: vscode.Disposable[] = [];
   private modified = new Map<string, EnvChanges>();
@@ -63,11 +65,10 @@ export class ProjectSession implements vscode.Disposable {
     await this.applyDefault();
 
     // Recover active envs, or flag drifted targets when disk matches another env.
-    // In-memory drifted tracking resets on reload; persist drift timestamp or prompt banner if users ignore status bar.
     const current = store.get(this.project);
     for (const app of this.project.apps) {
-      const detected = await detectAppEnv(app);
       const recorded = current.get(app.name);
+      const detected = await detectAppEnv(app, recorded);
       if (!recorded && detected) {
         current.set(app.name, detected);
       } else if (recorded && detected && detected !== recorded) {
@@ -129,13 +130,15 @@ export class ProjectSession implements vscode.Disposable {
 
   /**
    * Recomputes which targets no longer match their active env. Apps in `notify` that just became
-   * modified are reported through `onTargetModified`.
+   * modified are reported through `onTargetModified`. A drifted target matches another env, so it
+   * isn't a hand edit: offering to save it would overwrite the active env's file with that env.
    */
   async refreshModified(notify: App[] = []): Promise<void> {
     const before = this.modified;
     const after = new Map<string, EnvChanges>();
     const active = this.active();
     for (const app of this.project.apps) {
+      if (this.drifted.has(app.name)) continue;
       const title = active.get(app.name);
       const changes = title ? await targetChanges(app, title) : undefined;
       if (changes) after.set(app.name, changes);
@@ -158,7 +161,12 @@ export class ProjectSession implements vscode.Disposable {
     const title = this.project.config.defaultEnv;
     if (!title) return;
 
-    const { result, apps } = await applyDefaultEnv(this.project);
+    const { result, apps, restricted } = await applyDefaultEnv(this.project);
+    for (const app of restricted) {
+      this.host.log.warn(
+        `[${this.name}] default env "${title}" not applied to ${app.targetUri.fsPath}: outside the workspace folder in Restricted Mode`,
+      );
+    }
     const targets = apps.map((app) => relative(this.project, app.targetUri)).join(', ');
     switch (result) {
       case 'applied':
@@ -238,12 +246,14 @@ export class ProjectSession implements vscode.Disposable {
       this.drifted.delete(app.name);
       if (this.active().has(app.name)) await this.setActive([app], undefined);
     } else {
-      const detected = await detectAppEnv(app);
       const recorded = this.active().get(app.name);
+      const detected = await detectAppEnv(app, recorded);
       if (!recorded && detected) {
         await this.setActive([app], detected);
       } else if (recorded && detected && detected !== recorded) {
+        const isNew = this.drifted.get(app.name) !== detected;
         this.drifted.set(app.name, detected);
+        if (isNew) this.host.onTargetDrifted(this, app, detected);
       } else {
         this.drifted.delete(app.name);
       }

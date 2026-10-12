@@ -3,6 +3,7 @@ import { compareEnv, type EnvChanges, hasChanges } from '../core/diff';
 import { type App, findOpenDocument, type Project, readDisk, relative } from '../project';
 import { addMissingKeys } from './fixer';
 import type { Validator } from './validator';
+import { assertWritable, canWrite } from './writeGuard';
 
 export interface SwitchResult {
   switched: boolean;
@@ -29,6 +30,11 @@ export async function switchEnv(
     const where = apps.flatMap((app) => (app.env(title) ? [relative(project, app.envUri(app.env(title)!))] : []));
     void vscode.window.showErrorMessage(vscode.l10n.t('File not found: {0}', where.join(', ') || title));
     return cancelled;
+  }
+
+  // Refuse before asking anything, so a switch is never left half done.
+  for (const status of summary.statuses) {
+    if (status.exists) await assertWritable(project, status.app.targetUri);
   }
 
   const needsConfirm = summary.statuses.some((s) => s.env.confirm);
@@ -86,17 +92,25 @@ export type DefaultResult = 'applied' | 'targetsExist' | 'noDefault' | 'needsCon
 /**
  * Copies the default env to every app that has it and whose target doesn't exist yet (e.g. a
  * fresh clone). Never overwrites an existing target, and never auto-applies an env marked `confirm`.
+ * `restricted` lists the apps skipped because their target is outside the untrusted workspace.
  */
-export async function applyDefaultEnv(project: Project): Promise<{ result: DefaultResult; apps: App[] }> {
+export async function applyDefaultEnv(
+  project: Project,
+): Promise<{ result: DefaultResult; apps: App[]; restricted: App[] }> {
   const title = project.config.defaultEnv;
-  if (!title) return { result: 'noDefault', apps: [] };
+  const restricted: App[] = [];
+  if (!title) return { result: 'noDefault', apps: [], restricted };
 
   const missingTargets: App[] = [];
   for (const app of project.appsWithEnv(title)) {
-    if ((await readDisk(app.targetUri)) === undefined) missingTargets.push(app);
+    if ((await readDisk(app.targetUri)) !== undefined) continue;
+    if (await canWrite(project, app.targetUri)) missingTargets.push(app);
+    else restricted.push(app);
   }
-  if (missingTargets.length === 0) return { result: 'targetsExist', apps: [] };
-  if (missingTargets.some((app) => app.env(title)!.confirm)) return { result: 'needsConfirm', apps: missingTargets };
+  if (missingTargets.length === 0) return { result: 'targetsExist', apps: [], restricted };
+  if (missingTargets.some((app) => app.env(title)!.confirm)) {
+    return { result: 'needsConfirm', apps: missingTargets, restricted };
+  }
 
   const applied: App[] = [];
   for (const app of missingTargets) {
@@ -105,7 +119,9 @@ export async function applyDefaultEnv(project: Project): Promise<{ result: Defau
     await vscode.workspace.fs.copy(source, app.targetUri, { overwrite: false });
     applied.push(app);
   }
-  return applied.length ? { result: 'applied', apps: applied } : { result: 'missingFile', apps: missingTargets };
+  return applied.length
+    ? { result: 'applied', apps: applied, restricted }
+    : { result: 'missingFile', apps: missingTargets, restricted };
 }
 
 /** Apps whose target doesn't exist. */
@@ -117,11 +133,16 @@ export async function appsWithoutTarget(project: Project): Promise<App[]> {
   return result;
 }
 
-/** The env whose file has the same keys and values as the app's target (formatting aside). */
-export async function detectAppEnv(app: App): Promise<string | undefined> {
+/**
+ * The env whose file has the same keys and values as the app's target (formatting aside). When
+ * several envs match (identical files), `preferred` wins if it is one of them, so an app switched
+ * to the second of two identical envs isn't reported as drifted to the first.
+ */
+export async function detectAppEnv(app: App, preferred?: string): Promise<string | undefined> {
   const target = await readDisk(app.targetUri);
   if (target === undefined) return undefined;
-  for (const env of app.envs) {
+  const first = preferred ? app.env(preferred) : undefined;
+  for (const env of first ? [first, ...app.envs.filter((e) => e !== first)] : app.envs) {
     const source = await readDisk(app.envUri(env));
     if (source !== undefined && !hasChanges(compareEnv(source, target))) return env.title;
   }
