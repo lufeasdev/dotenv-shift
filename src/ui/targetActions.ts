@@ -1,5 +1,6 @@
 import * as vscode from 'vscode';
 import { type App, relative } from '../project';
+import { assertWritable } from '../services/writeGuard';
 import type { ProjectSession } from '../session';
 import { formatChanges } from './format';
 
@@ -106,6 +107,7 @@ export async function offerTargetActions(
     if (choice === SAVE) {
       await saveTargetToSource(session, app);
     } else {
+      await assertWritable(project, app.targetUri);
       await vscode.workspace.fs.copy(sourceUri, app.targetUri, { overwrite: true });
       session.log(`discarded edits in ${target} (restored from ${source})`);
     }
@@ -118,8 +120,32 @@ async function saveTargetToSource(session: ProjectSession, app: App): Promise<vo
   const title = session.active().get(app.name);
   const env = title ? app.env(title) : undefined;
   if (!env) return;
+  await assertWritable(session.project, app.envUri(env));
   await vscode.workspace.fs.copy(app.targetUri, app.envUri(env), { overwrite: true });
   session.log(
     `saved edits in ${relative(session.project, app.targetUri)} to ${relative(session.project, app.envUri(env))}`,
   );
+}
+
+/**
+ * A target now matches another env than the active one (e.g. `.env.staging` was copied over
+ * `.env` from a terminal). Offers to make that env the active one, without copying or restarting.
+ */
+export async function offerDriftActions(session: ProjectSession, app: App, detected: string): Promise<void> {
+  const title = session.active().get(app.name);
+  if (!title) return;
+  const target = relative(session.project, app.targetUri);
+  const USE = vscode.l10n.t('Use {0}', detected);
+  const choice = await vscode.window.showInformationMessage(
+    vscode.l10n.t('{0} now matches {1}, but the active env is {2}.', target, detected, title),
+    USE,
+  );
+  if (choice !== USE) return;
+  await session.exclusive(async () => {
+    // The target may have changed again while the notification was open.
+    if (session.driftedApps().get(app.name) !== detected) return;
+    await session.setActive([app], detected);
+    await session.refreshModified();
+    session.log(`${target} matches "${detected}", now the active env`);
+  });
 }

@@ -25,6 +25,15 @@ describe('parseEnv', () => {
     expect(entries[1].line).toBe(3);
   });
 
+  it('reads a quote that is never closed as a single-line value', () => {
+    const entries = parseEnv('A="abc # typo\nB=2\nC=3');
+    expect(entries.map((e) => [e.key, e.value, e.line])).toEqual([
+      ['A', '"abc', 0],
+      ['B', '2', 1],
+      ['C', '3', 2],
+    ]);
+  });
+
   it('handles escaped quotes and CRLF', () => {
     const entries = parseEnv('A="say \\"hi\\""\r\nB=2\r\n');
     expect(entries.map((e) => e.key)).toEqual(['A', 'B']);

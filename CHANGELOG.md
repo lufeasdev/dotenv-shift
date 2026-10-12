@@ -1,5 +1,23 @@
 # Changelog
 
+## Unreleased
+
+### Added
+- Drift detection: when a target is replaced with another env's content, the status bar shows
+  `Local → Production?` and a notification offers to use that env, without copying or restarting.
+  `getStatus()` reports it as `drifted`.
+
+### Security
+- In Restricted Mode, files outside the workspace folder (absolute paths, `..`, symlinks) are
+  never written, and the default env is not applied to such targets.
+
+### Fixed
+- A drifted target is no longer reported as a hand edit, so "Save to env file" can't overwrite
+  the active env's file with another env.
+- Identical env files no longer show a false drift: the env that was switched to stays active.
+- The "Switch environment" link in the status bar tooltip works.
+- An unclosed quote in an env file no longer swallows the rest of the file.
+
 ## 0.1.0
 
 First public release of Dotenv Shift for VS Code.

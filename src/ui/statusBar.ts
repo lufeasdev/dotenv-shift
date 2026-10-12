@@ -47,7 +47,7 @@ export class EnvStatusBar implements vscode.Disposable {
     this.item.text = `$(symbol-variable) ${label}${modSuffix}${edited.length ? ` ${modifiedLabel}` : ''}${missing ? ` $(warning) ${missing}` : ''}`;
 
     const tooltip = new vscode.MarkdownString(undefined, true);
-    tooltip.isTrusted = { enabledCommands: [Commands.showChanges] };
+    tooltip.isTrusted = { enabledCommands: [Commands.showChanges, Commands.switch] };
     tooltip.appendMarkdown(`**${DISPLAY_NAME}** — ${projectName}\n\n`);
     if (state.monorepo) {
       for (const app of state.perApp) {
@@ -73,7 +73,7 @@ export class EnvStatusBar implements vscode.Disposable {
     if (drifted.length) {
       tooltip.appendMarkdown(`$(sync) ${vscode.l10n.t('Target matches another environment on disk:')}\n\n`);
       for (const app of drifted) {
-        tooltip.appendText(`${app.target}: ${app.title ?? 'none'} → ${app.drifted}\n`);
+        tooltip.appendText(`${app.target}: ${app.title ?? vscode.l10n.t('none')} → ${app.drifted}\n`);
       }
       tooltip.appendMarkdown(`\n[${vscode.l10n.t('Switch environment')}](command:${Commands.switch})\n\n`);
     }

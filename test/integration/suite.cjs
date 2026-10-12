@@ -92,22 +92,28 @@ test('concurrent switches run one after the other', async () => {
 
 const status = (app) => api.getStatus(folderUri()).apps.find((a) => a.name === app);
 
-test('a reformatted copy of another env is detected as that env', async () => {
+test('a reformatted copy of another env is flagged as drifted, not as a hand edit', async () => {
   // Same keys and values as web's .env.production, but reordered with comments and spacing.
   write(
     'apps/web/.env',
     '# copied by hand\nDEBUG=false\n\nAPI_URL = https://api.example.invalid\nPORT=8080\nAPP_NAME="Web (production)"\n',
   );
   await eventually(() =>
-    assert.deepEqual(pick(status('web'), 'env', 'modified'), { env: 'Production', modified: false }),
+    assert.deepEqual(pick(status('web'), 'env', 'drifted', 'modified'), {
+      env: 'Staging',
+      drifted: 'Production',
+      modified: false,
+    }),
   );
+  write('apps/web/.env', read('apps/web/.env.staging'));
+  await eventually(() => assert.equal(status('web').drifted, undefined));
 });
 
 test('a hand edit keeps the active env and marks the target modified', async () => {
-  write('apps/web/.env', `${read('apps/web/.env.production').replace('PORT=8080', 'PORT=9999')}EXTRA=1\n`);
+  write('apps/web/.env', `${read('apps/web/.env.staging').replace('PORT=3002', 'PORT=9999')}EXTRA=1\n`);
   await eventually(() => {
     const web = status('web');
-    assert.equal(web.env, 'Production');
+    assert.equal(web.env, 'Staging');
     assert.equal(web.modified, true);
     assert.deepEqual(web.changes, { changed: ['PORT'], added: ['EXTRA'], removed: [] });
   });
@@ -116,19 +122,19 @@ test('a hand edit keeps the active env and marks the target modified', async () 
 test('Show .env Changes with action "discard" restores the target', async () => {
   await vscode.commands.executeCommand('dotenvShift.showChanges', { app: 'web', action: 'discard' });
   await eventually(() => {
-    assert.equal(read('apps/web/.env'), read('apps/web/.env.production'));
+    assert.equal(read('apps/web/.env'), read('apps/web/.env.staging'));
     assert.equal(status('web').modified, false);
   });
 });
 
 test('Show .env Changes with action "save" copies the edits to the env file', async () => {
-  write('apps/web/.env', read('apps/web/.env.production').replace('PORT=8080', 'PORT=8181'));
+  write('apps/web/.env', read('apps/web/.env.staging').replace('PORT=3002', 'PORT=8181'));
   await eventually(() => assert.equal(status('web').modified, true));
   await vscode.commands.executeCommand('dotenvShift.showChanges', { app: 'web', action: 'save' });
   await eventually(() => {
-    assert.match(read('apps/web/.env.production'), /^PORT=8181$/m);
+    assert.match(read('apps/web/.env.staging'), /^PORT=8181$/m);
     assert.equal(status('web').modified, false);
-    assert.equal(status('web').env, 'Production');
+    assert.equal(status('web').env, 'Staging');
   });
 });
 
