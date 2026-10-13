@@ -2,6 +2,8 @@
 
 ## Unreleased
 
+## 0.2.0 - 2026-10-13
+
 ### Added
 - Drift detection: when a target is replaced with another env's content, the status bar shows
   `Local → Production?` and a notification offers to use that env, without copying or restarting.
